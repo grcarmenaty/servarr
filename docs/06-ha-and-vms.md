@@ -83,12 +83,12 @@ non-Ceph disk.
 
 | Guest | Type | Storage | HA? |
 |-------|------|---------|-----|
-| Reverse proxy / DNS (AdGuard, Traefik…) | LXC | vm-pool | yes |
-| Home automation | VM/LXC | vm-pool | yes |
+| AdGuard, Caddy, WireGuard, Uptime Kuma (`docs/09`) | LXC ×4 | vm-pool | yes |
+| Home Assistant OS (`docs/09`) | VM | vm-pool | yes |
 | **servarr VM** — Jellyfin + *arrs + downloader (`docs/08`) | VM | vm-pool (root + media data disk) | yes |
 | Playground / test VMs | VM | vm-pool | no |
 
 The whole media stack — server, *arrs, downloads, and the library
 itself — lives in the servarr VM on Ceph-backed disks, so any node can
-run it and HA moves it freely. Build it with
-`scripts/10-create-servarr-vm.sh`.
+run it and HA moves it freely. Everything above is created by scripts
+`10`–`12`.

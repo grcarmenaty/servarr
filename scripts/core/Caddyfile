@@ -1,0 +1,77 @@
+# Reverse proxy for the homelab — plain HTTP on the LAN (no cert warnings).
+# Hostnames resolve via AdGuard DNS rewrites: *.@DOMAIN@ → this host
+# (docs/09-core-services.md). @TOKENS@ are filled in at provision time.
+#
+# Want real HTTPS later? Buy a domain, use Caddy's ACME DNS challenge, and
+# drop the http:// prefixes. For now only Vaultwarden (if you add it) needs
+# TLS — see the commented block at the bottom.
+
+# ── landing portal ─────────────────────────────────────────────────────────
+http://@DOMAIN@, http://home.@DOMAIN@ {
+	root * /var/www/home
+	file_server
+}
+
+# ── infrastructure ─────────────────────────────────────────────────────────
+http://proxmox.@DOMAIN@ {
+	reverse_proxy https://@NODE1_IP@:8006 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}
+
+http://dns.@DOMAIN@ {
+	reverse_proxy @ADGUARD_IP@:80
+}
+
+http://status.@DOMAIN@ {
+	reverse_proxy @KUMA_IP@:3001
+}
+
+# ── media stack (servarr VM) ───────────────────────────────────────────────
+http://jellyfin.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:8096
+}
+
+http://requests.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:5055
+}
+
+http://sonarr.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:8989
+}
+
+http://radarr.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:7878
+}
+
+http://prowlarr.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:9696
+}
+
+http://bazarr.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:6767
+}
+
+http://torrents.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:8080
+}
+
+# ── home automation (optional HAOS VM) ─────────────────────────────────────
+http://hass.@DOMAIN@ {
+	reverse_proxy @HAOS_IP@:8123
+}
+
+# ── extras (uncomment if you deploy docker-compose.extras.yml) ─────────────
+# http://sync.@DOMAIN@ {
+# 	reverse_proxy @SERVARR_IP@:8384
+# }
+#
+# Vaultwarden REQUIRES https (browser crypto). `tls internal` makes Caddy a
+# local CA — install its root cert on your devices once:
+#   /var/lib/caddy/.local/share/caddy/pki/authorities/local/root.crt
+# https://vault.@DOMAIN@ {
+# 	tls internal
+# 	reverse_proxy @SERVARR_IP@:8222
+# }

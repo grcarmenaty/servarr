@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Add a WireGuard client and print its config + QR code.
+# Installed as /usr/local/bin/wg-add-peer inside the wireguard LXC.
+#
+#   wg-add-peer phone
+#   wg-add-peer laptop
+#
+# Client configs are kept in /root/wg-clients/.
+set -euo pipefail
+
+NAME="${1:-}"
+[[ -n "$NAME" ]] || { echo "usage: wg-add-peer <device-name>"; exit 1; }
+[[ $EUID -eq 0 ]] || { echo "run as root"; exit 1; }
+
+source /etc/wireguard/params   # WG_NET, WG_ENDPOINT, CLIENT_DNS, LAN_NET
+CLIENT_DIR=/root/wg-clients
+mkdir -p "$CLIENT_DIR"
+[[ ! -f "${CLIENT_DIR}/${NAME}.conf" ]] || { echo "client '${NAME}' already exists"; exit 1; }
+
+# next free host address in WG_NET (server is .1)
+BASE="${WG_NET%.*/*}"                       # e.g. 10.8.0
+LAST="$(grep -oE "${BASE//./\\.}\.[0-9]+" /etc/wireguard/wg0.conf | cut -d. -f4 | sort -n | tail -1)"
+CLIENT_IP="${BASE}.$(( LAST + 1 ))"
+
+umask 077
+PRIV="$(wg genkey)"
+PUB="$(wg pubkey <<< "$PRIV")"
+PSK="$(wg genpsk)"
+
+cat >> /etc/wireguard/wg0.conf <<EOF
+
+[Peer]
+# ${NAME}
+PublicKey = ${PUB}
+PresharedKey = ${PSK}
+AllowedIPs = ${CLIENT_IP}/32
+EOF
+
+[[ -n "${WG_ENDPOINT}" ]] || WG_ENDPOINT="CHANGE-ME.example.com:51820"
+
+cat > "${CLIENT_DIR}/${NAME}.conf" <<EOF
+[Interface]
+PrivateKey = ${PRIV}
+Address = ${CLIENT_IP}/32
+DNS = ${CLIENT_DNS}
+
+[Peer]
+PublicKey = $(cat /etc/wireguard/server.pub)
+PresharedKey = ${PSK}
+# LAN + VPN subnets only (split tunnel). For full-tunnel use: 0.0.0.0/0
+AllowedIPs = ${LAN_NET}, ${WG_NET}
+Endpoint = ${WG_ENDPOINT}
+PersistentKeepalive = 25
+EOF
+
+# apply without dropping existing sessions
+wg syncconf wg0 <(wg-quick strip wg0)
+
+echo "── ${CLIENT_DIR}/${NAME}.conf ──────────────────────────────"
+cat "${CLIENT_DIR}/${NAME}.conf"
+echo "────────────────────────────────────────────────────────────"
+echo "Scan with the WireGuard mobile app:"
+qrencode -t ansiutf8 < "${CLIENT_DIR}/${NAME}.conf"

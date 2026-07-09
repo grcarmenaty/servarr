@@ -59,8 +59,10 @@ triple-replicated, ~6.3 TB safe working set.
 | `docs/06-ha-and-vms.md` | VM storage, live migration, high availability |
 | `docs/07-troubleshooting.md` | Common failure modes on small/old hardware |
 | `docs/08-servarr-stack.md` | Deploying the media stack (Jellyfin + *arrs) on the cluster |
+| `docs/09-core-services.md` | DNS, reverse proxy, VPN, monitoring, smart home, backups, UPS |
 | `scripts/cluster.env` | Single config file — edit this first |
 | `scripts/*.sh` | Setup scripts, numbered in execution order |
+| `scripts/core/` | Provisioning scripts + configs for the core service LXCs |
 | `servarr/` | Docker Compose stack + bootstrap for the media VM |
 
 ## Setup order
@@ -76,7 +78,10 @@ triple-replicated, ~6.3 TB safe working set.
 7. Configure HA and create your first VMs (`docs/06-ha-and-vms.md`).
 8. Deploy the media stack (`docs/08-servarr-stack.md` /
    `scripts/10-create-servarr-vm.sh` + `servarr/`).
-9. Verify with `scripts/99-health-check.sh` at any point.
+9. Deploy the core services — DNS, proxy, VPN, monitoring, smart home
+   (`docs/09-core-services.md` / scripts `11`–`12`) — and set up
+   backups + UPS per the same doc.
+10. Verify with `scripts/99-health-check.sh` at any point.
 
 ## Golden rules for a 3-node Ceph homelab
 

@@ -105,5 +105,9 @@ and the exact cabling table: `docs/02-network.md`.
 6. `scripts/03-setup-ceph.sh` (install everywhere, init on node1, mon everywhere).
 7. `scripts/04-create-osds.sh` × 5 disks per node.
 8. `scripts/05-create-pools.sh` once.
-9. `scripts/99-health-check.sh` → HEALTH_OK → start building VMs
-   (`docs/06-ha-and-vms.md`).
+9. `scripts/99-health-check.sh` → HEALTH_OK.
+10. `scripts/10-create-servarr-vm.sh` → media stack (`docs/08`).
+11. `scripts/11-create-core-lxcs.sh all --ha` → DNS, proxy, VPN,
+    monitoring; optional `scripts/12-create-haos-vm.sh` for Home
+    Assistant. Finish the checklists in `docs/09-core-services.md`
+    (router DHCP → AdGuard, WireGuard port forward, backup job, UPS).

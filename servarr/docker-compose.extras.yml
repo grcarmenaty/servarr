@@ -1,0 +1,43 @@
+# Optional extras for the servarr VM — password manager + file sync.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.extras.yml up -d
+#   (stack both with the VPN overlay too, order doesn't matter)
+#
+# After deploying, uncomment the matching hostnames in the Caddy LXC's
+# /etc/caddy/Caddyfile (sync.* / vault.*) and `systemctl reload caddy`.
+
+services:
+  # Bitwarden-compatible password manager.
+  # ⚠ The web vault/browser extensions REQUIRE HTTPS — use the
+  #   https://vault.<domain> Caddy block (tls internal) from the Caddyfile,
+  #   never the bare http port, or logins will fail.
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      DOMAIN: https://vault.home.lan
+      SIGNUPS_ALLOWED: "true"   # create your accounts, then set to "false"
+    ports:
+      - "8222:80"
+    volumes:
+      - ${CONFIG_ROOT}/vaultwarden:/data
+
+  # Continuous file sync between your devices (phone photos, documents…)
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    container_name: syncthing
+    restart: unless-stopped
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+      - "8384:8384"            # web UI
+      - "22000:22000"          # sync protocol
+      - "22000:22000/udp"
+      - "21027:21027/udp"      # local discovery
+    volumes:
+      - ${CONFIG_ROOT}/syncthing:/config
+      - ${DATA_ROOT}/sync:/data/sync
