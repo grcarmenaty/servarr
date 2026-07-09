@@ -29,9 +29,9 @@ pveceph init --network 10.10.10.0/24
 ```
 
 `--network` is the Ceph **public network** — the subnet OSDs and clients
-talk on. Use your dedicated Ceph subnet; single-NIC clusters use the LAN
-subnet instead. (A separate `--cluster-network` for replication traffic
-is overkill with only two NICs.)
+talk on: the 10 GbE mesh. Both client I/O and replication ride it; with
+only 3 nodes there's nothing to gain from splitting off a separate
+`--cluster-network`, and the mesh has the bandwidth for both.
 
 ## 3. Monitors and managers (one per node)
 

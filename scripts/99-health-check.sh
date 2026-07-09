@@ -28,9 +28,16 @@ fi
 section "Node reachability"
 for i in "${!NODE_NAMES[@]}"; do
     if ping -c1 -W2 "${NODE_IPS[$i]}" >/dev/null 2>&1; then
-        echo "  ${NODE_NAMES[$i]} (${NODE_IPS[$i]})  OK"
+        echo "  ${NODE_NAMES[$i]} LAN  (${NODE_IPS[$i]})  OK"
     else
-        echo "  ${NODE_NAMES[$i]} (${NODE_IPS[$i]})  UNREACHABLE"; FAIL=1
+        echo "  ${NODE_NAMES[$i]} LAN  (${NODE_IPS[$i]})  UNREACHABLE"; FAIL=1
+    fi
+    if [[ "${#CEPH_IPS[@]}" -gt "$i" ]]; then
+        if ping -c1 -W2 "${CEPH_IPS[$i]}" >/dev/null 2>&1; then
+            echo "  ${NODE_NAMES[$i]} mesh (${CEPH_IPS[$i]})  OK"
+        else
+            echo "  ${NODE_NAMES[$i]} mesh (${CEPH_IPS[$i]})  UNREACHABLE"; FAIL=1
+        fi
     fi
 done
 

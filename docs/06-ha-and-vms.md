@@ -27,7 +27,9 @@ With disks on Ceph, migration only copies RAM:
 qm migrate <vmid> node2 --online
 ```
 
-or right-click the VM → *Migrate*. Seconds to a minute on gigabit.
+or right-click the VM → *Migrate*. Migration traffic is pinned to the
+10 GbE mesh (`migration:` line in `/etc/pve/datacenter.cfg`, set by
+`02-create-cluster.sh`), so even a big-RAM VM moves in seconds.
 Use it to empty a node before hardware maintenance:
 
 ```bash

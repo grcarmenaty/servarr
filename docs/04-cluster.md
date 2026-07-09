@@ -14,23 +14,26 @@ UI, shared configuration, and quorum-based membership (corosync).
 ## Create the cluster (on node1 only)
 
 ```bash
-pvecm create homelab
+bash 02-create-cluster.sh create
+# equivalent to: pvecm create homelab --link0 192.168.1.11 --link1 10.10.10.11
 ```
 
-(Or GUI: *Datacenter → Cluster → Create Cluster*.)
+Corosync gets **two** heartbeat links: link0 on the LAN, link1 on the
+10 GbE mesh. If either network fails or floods, quorum survives on the
+other — this is the cheapest insurance in the whole setup. The script
+also pins live migration to the mesh (`migration:
+secure,network=10.10.10.0/24` in `/etc/pve/datacenter.cfg`).
 
-Corosync will use node1's management IP as link0. If you built the
-dedicated 10.10.10.0/24 network you can instead put corosync on it —
-but on a 2-NIC budget it's better to keep corosync on the LAN NIC and
-reserve the second NIC for Ceph, so storage floods don't starve the
-cluster heartbeat. That's what these docs assume.
+(GUI alternative: *Datacenter → Cluster → Create Cluster*, add the mesh
+IP as a second link.)
 
 ## Join node2 and node3
 
 On **node2** (then repeat on node3):
 
 ```bash
-pvecm add 192.168.1.11
+bash 02-create-cluster.sh join
+# equivalent to: pvecm add 192.168.1.11 --link0 <this-LAN-ip> --link1 <this-mesh-ip>
 ```
 
 - Confirm the fingerprint, enter node1's root password.

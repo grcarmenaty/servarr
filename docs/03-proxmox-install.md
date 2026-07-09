@@ -24,16 +24,17 @@ Do this on each of the three nodes. Current target: **Proxmox VE 9.x**
 ## Installer walkthrough
 
 1. Boot the USB → *Install Proxmox VE (Graphical)*.
-2. **Target disk**: pick the small **OS SSD** — double-check you're not
-   nuking your intended OSD disk. Filesystem: `ext4` on LVM (default) is
-   the right choice for a single OS disk. ZFS RAID is unnecessary here
-   and eats RAM you need for Ceph.
+2. **Target disk**: pick the designated **OS disk** (one of the 1 TB
+   disks per `docs/00-this-cluster.md`) — double-check by size/model
+   that you're not nuking an intended OSD disk. Filesystem: `ext4` on
+   LVM (default) is the right choice for a single OS disk. ZFS RAID is
+   unnecessary here and eats RAM better spent on Ceph.
 3. **Country/timezone/keyboard**: as appropriate. Correct timezone
    matters — Ceph hates clock skew.
 4. **Password + email**: same root password on all nodes keeps life
    simple (you can harden later); email can be anything.
 5. **Network**:
-   - Interface: your **LAN** NIC (not the future Ceph NIC).
+   - Interface: the **1 GbE LAN** NIC (not one of the 10 GbE mesh ports).
    - Hostname (FQDN): `node1.home.lan` (then `node2.…`, `node3.…`).
      The part before the first dot becomes the node name — final answer,
      no renames later.
@@ -72,6 +73,8 @@ The script does, idempotently:
 4. Verifies chrony (time sync) is active.
 5. Optionally disables the subscription popup nag.
 
-Then configure the second (Ceph) NIC per `docs/02-network.md` and run the
-verification pings. When all three nodes are installed, updated, and can
-ping each other on every subnet, continue to `docs/04-cluster.md`.
+Then cable the 10 GbE mesh triangle and run
+`scripts/00-ceph-mesh-network.sh <portX> <portY>` on each node
+(`docs/02-network.md`), followed by the verification pings. When all
+three nodes are installed, updated, and can ping each other on both
+subnets, continue to `docs/04-cluster.md`.

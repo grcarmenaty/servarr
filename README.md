@@ -19,37 +19,40 @@ cluster:
 
 ## Cluster topology
 
+3 nodes — each 64 GB RAM, Ryzen 7 class, 2× 3 TB + 4× 1 TB disks,
+2× 10 GbE + 1× 1 GbE. The two 10 GbE ports form a switchless **full
+mesh** (three direct cables) carrying all Ceph and migration traffic;
+the 1 GbE carries LAN/internet/VM traffic.
+
 ```
-                        ┌──────────────┐
-                        │  Router/LAN  │
-                        │ 192.168.1.0/24
-                        └──────┬───────┘
-              ┌────────────────┼────────────────┐
-              │                │                │
-        ┌─────┴─────┐    ┌─────┴─────┐    ┌─────┴─────┐
-        │   node1   │    │   node2   │    │   node3   │
-        │ .1.11     │    │ .1.12     │    │ .1.13     │
-        │           │    │           │    │           │
-        │ mon+mgr   │    │ mon+mgr   │    │ mon+mgr   │
-        │ osd(s)    │    │ osd(s)    │    │ osd(s)    │
-        └─────┬─────┘    └─────┬─────┘    └─────┬─────┘
-              │                │                │
-              └────────────────┼────────────────┘
-                        ┌──────┴───────┐
-                        │ Ceph network │  (dedicated NIC/switch
-                        │ 10.10.10.0/24│   if you have one)
-                        └──────────────┘
+                     ┌──────────────┐
+                     │  Router/LAN  │ 192.168.1.0/24
+                     └──────┬───────┘ (1 GbE per node)
+           ┌────────────────┼────────────────┐
+           │                │                │
+     ┌─────┴─────┐    ┌─────┴─────┐    ┌─────┴─────┐
+     │   node1   │    │   node2   │    │   node3   │
+     │ .1.11     │    │ .1.12     │    │ .1.13     │
+     │ mon+mgr   │    │ mon+mgr   │    │ mon+mgr   │
+     │ 5× osd    │    │ 5× osd    │    │ 5× osd    │
+     └──┬─────┬──┘    └──┬─────┬──┘    └──┬─────┬──┘
+        │     └──────────┤     └──────────┤     │
+        │   10.10.10.0/24│  full mesh,    │     │
+        └────────────────┴──2×10GbE ──────┴─────┘
+                            per node, no switch
 ```
 
 Every node runs the full stack: Proxmox VE hypervisor, a Ceph monitor, a
-Ceph manager, and one or more OSDs (one per data disk).
+Ceph manager, and five OSDs (one per data disk). Raw 27 TB → ~9 TB
+triple-replicated, ~6.3 TB safe working set.
 
 ## Repository layout
 
 | Path | Contents |
 |------|----------|
-| `docs/01-hardware.md` | What your scrap hardware needs to have (and workarounds when it doesn't) |
-| `docs/02-network.md` | IP plan, bridges, dedicated Ceph network, `/etc/network/interfaces` examples |
+| `docs/00-this-cluster.md` | **The concrete build plan for our actual hardware — start here** |
+| `docs/01-hardware.md` | General hardware guidance for scrap/salvage builds (reference) |
+| `docs/02-network.md` | IP plan, `vmbr0`, the 10 GbE full-mesh Ceph network, `/etc/network/interfaces` examples |
 | `docs/03-proxmox-install.md` | Installing Proxmox VE on each node, post-install steps |
 | `docs/04-cluster.md` | Forming the 3-node Proxmox cluster |
 | `docs/05-ceph.md` | Installing Ceph, monitors, OSDs, pools, CephFS |
@@ -60,14 +63,16 @@ Ceph manager, and one or more OSDs (one per data disk).
 
 ## Setup order
 
-1. Read `docs/01-hardware.md`, inventory your 3 machines, pick disks.
-2. Plan addressing per `docs/02-network.md`, then edit `scripts/cluster.env`.
+1. Read `docs/00-this-cluster.md` — the disk/NIC/IP plan for this build.
+2. Adjust `scripts/cluster.env` (LAN IPs to your subnet).
 3. Install Proxmox VE on all 3 nodes (`docs/03-proxmox-install.md`), then
    run `scripts/01-post-install.sh` on **each** node.
-4. Form the cluster (`docs/04-cluster.md` / `scripts/02-create-cluster.sh`).
-5. Set up Ceph (`docs/05-ceph.md` / scripts `03`–`05`).
-6. Configure HA and create your first VMs (`docs/06-ha-and-vms.md`).
-7. Verify with `scripts/99-health-check.sh` at any point.
+4. Cable the 10 GbE mesh triangle and run
+   `scripts/00-ceph-mesh-network.sh` on each node (`docs/02-network.md`).
+5. Form the cluster (`docs/04-cluster.md` / `scripts/02-create-cluster.sh`).
+6. Set up Ceph (`docs/05-ceph.md` / scripts `03`–`05`).
+7. Configure HA and create your first VMs (`docs/06-ha-and-vms.md`).
+8. Verify with `scripts/99-health-check.sh` at any point.
 
 ## Golden rules for a 3-node Ceph homelab
 
@@ -75,7 +80,5 @@ Ceph manager, and one or more OSDs (one per data disk).
   data gets silently corrupted. Stay on `size=3, min_size=2`.
 - **Never** reboot two nodes at once. One at a time, wait for
   `ceph -s` → `HEALTH_OK` between reboots.
-- Give Ceph its own NIC if you physically can. It is the single biggest
-  performance win on old hardware.
 - Keep VM disk usage under ~70% of raw-capacity/3 — Ceph needs headroom
   to re-replicate when a disk or node dies.

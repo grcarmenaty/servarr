@@ -15,14 +15,25 @@ MODE="${1:-}"
 FIRST_IP="${NODE_IPS[0]}"
 
 preflight() {
-    # all nodes must resolve and answer
+    # all nodes must resolve and answer, on the LAN and (if configured) the mesh
     for i in "${!NODE_NAMES[@]}"; do
         getent hosts "${NODE_NAMES[$i]}" >/dev/null \
             || die "${NODE_NAMES[$i]} not in /etc/hosts — run 01-post-install.sh first"
         ping -c1 -W2 "${NODE_IPS[$i]}" >/dev/null \
-            || die "cannot ping ${NODE_NAMES[$i]} (${NODE_IPS[$i]})"
+            || die "cannot ping ${NODE_NAMES[$i]} (${NODE_IPS[$i]}) on the LAN"
+        if [[ "${#CEPH_IPS[@]}" -gt 0 ]]; then
+            ping -c1 -W2 "${CEPH_IPS[$i]}" >/dev/null \
+                || die "cannot ping ${NODE_NAMES[$i]} (${CEPH_IPS[$i]}) on the Ceph mesh — run 00-ceph-mesh-network.sh everywhere first"
+        fi
     done
-    log "preflight OK — all nodes resolvable and reachable"
+    log "preflight OK — all nodes reachable on all networks"
+}
+
+# corosync link args for the node at index $1: link0 = LAN, link1 = mesh
+link_args() {
+    local i="$1" args=(--link0 "${NODE_IPS[$i]}")
+    [[ "${#CEPH_IPS[@]}" -gt 0 ]] && args+=(--link1 "${CEPH_IPS[$i]}")
+    echo "${args[@]}"
 }
 
 case "$MODE" in
@@ -33,8 +44,13 @@ create)
         log "cluster already exists:"; pvecm status; exit 0
     fi
     preflight
-    log "Creating cluster '${CLUSTER_NAME}'"
-    pvecm create "${CLUSTER_NAME}"
+    log "Creating cluster '${CLUSTER_NAME}' (corosync link0=LAN, link1=mesh)"
+    # shellcheck disable=SC2046
+    pvecm create "${CLUSTER_NAME}" $(link_args 0)
+    if ! grep -q '^migration:' /etc/pve/datacenter.cfg 2>/dev/null; then
+        echo "migration: secure,network=${CEPH_NETWORK}" >> /etc/pve/datacenter.cfg
+        log "live migration pinned to ${CEPH_NETWORK} (datacenter.cfg)"
+    fi
     pvecm status
     echo
     log "Now run 'bash 02-create-cluster.sh join' on the other nodes, one at a time."
@@ -49,8 +65,11 @@ join)
     if [[ -n "$(ls -A /etc/pve/qemu-server 2>/dev/null)" || -n "$(ls -A /etc/pve/lxc 2>/dev/null)" ]]; then
         die "this node has guests — a joining node must be empty (docs/04-cluster.md)"
     fi
+    IDX="$(this_node_index)"
+    [[ -n "$IDX" ]] || die "hostname $(hostname) not in NODE_NAMES (cluster.env)"
     log "Joining cluster via ${FIRST_IP} (you'll be asked for its root password)"
-    pvecm add "${FIRST_IP}"
+    # shellcheck disable=SC2046
+    pvecm add "${FIRST_IP}" $(link_args "$IDX")
     pvecm status
     ;;
 *)

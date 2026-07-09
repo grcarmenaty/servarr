@@ -1,5 +1,10 @@
 # 01 — Hardware Requirements (Scrap Edition)
 
+> **Note:** this page is generic reference for salvage builds. The
+> concrete plan for *our* nodes (64 GB / Ryzen 7 / 2×10 GbE / 6 disks)
+> is in `docs/00-this-cluster.md` — our hardware clears every minimum
+> here with room to spare.
+
 Ceph was designed for datacenters, but a 3-node cluster runs fine on old
 desktops and workstations **if** you respect a few hard requirements.
 This page tells you what actually matters and what you can cheap out on.
