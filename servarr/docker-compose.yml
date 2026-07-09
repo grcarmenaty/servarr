@@ -1,0 +1,109 @@
+# Servarr media stack — runs inside the servarr VM (docs/08-servarr-stack.md).
+#
+#   cp .env.example .env   # edit first
+#   docker compose up -d
+#
+# With a VPN in front of the torrent client:
+#   docker compose -f docker-compose.yml -f docker-compose.vpn.yml up -d
+#
+# Path layout follows TRaSH-guides: one /data filesystem so imports are
+# instant hardlinks, never copies:
+#   /data/torrents/{movies,tv,music}   downloads land here
+#   /data/media/{movies,tv,music}      libraries live here
+
+x-common: &common
+  restart: unless-stopped
+  environment: &common-env
+    PUID: ${PUID:-1000}
+    PGID: ${PGID:-1000}
+    TZ: ${TZ:-Etc/UTC}
+
+services:
+  # ── media server ──────────────────────────────────────────────────────
+  jellyfin:
+    <<: *common
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    ports:
+      - "8096:8096"
+    volumes:
+      - ${CONFIG_ROOT}/jellyfin:/config
+      - ${DATA_ROOT}/media:/data/media
+
+  # ── request management (users ask for movies/shows here) ─────────────
+  jellyseerr:
+    <<: *common
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+      - "5055:5055"
+    volumes:
+      - ${CONFIG_ROOT}/jellyseerr:/app/config
+
+  # ── the *arrs ─────────────────────────────────────────────────────────
+  sonarr: # TV
+    <<: *common
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    ports:
+      - "8989:8989"
+    volumes:
+      - ${CONFIG_ROOT}/sonarr:/config
+      - ${DATA_ROOT}:/data
+
+  radarr: # movies
+    <<: *common
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    ports:
+      - "7878:7878"
+    volumes:
+      - ${CONFIG_ROOT}/radarr:/config
+      - ${DATA_ROOT}:/data
+
+  prowlarr: # indexer manager
+    <<: *common
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    ports:
+      - "9696:9696"
+    volumes:
+      - ${CONFIG_ROOT}/prowlarr:/config
+
+  bazarr: # subtitles
+    <<: *common
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    ports:
+      - "6767:6767"
+    volumes:
+      - ${CONFIG_ROOT}/bazarr:/config
+      - ${DATA_ROOT}/media:/data/media
+
+  # ── download client ───────────────────────────────────────────────────
+  qbittorrent:
+    <<: *common
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      <<: *common-env
+      WEBUI_PORT: "8080"
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+    volumes:
+      - ${CONFIG_ROOT}/qbittorrent:/config
+      - ${DATA_ROOT}/torrents:/data/torrents
+
+  # ── helper: solves Cloudflare challenges for Prowlarr indexers ────────
+  flaresolverr:
+    restart: unless-stopped
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+      - "8191:8191"

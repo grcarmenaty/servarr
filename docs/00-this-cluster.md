@@ -68,7 +68,7 @@ but you want slack).
 
 | Interface | Network | Purpose |
 |-----------|---------|---------|
-| 1 GbE | 192.168.1.0/24 (LAN) | `vmbr0`: management UI, VM/container traffic, internet, corosync **link0** |
+| 1 GbE | 10.0.0.0/24 (LAN) | `vmbr0`: management UI, VM/container traffic, internet, corosync **link0** |
 | 10 GbE port X | 10.10.10.0/24 (mesh) | direct cable to the *next* node |
 | 10 GbE port Y | 10.10.10.0/24 (mesh) | direct cable to the *previous* node |
 
@@ -87,9 +87,9 @@ and the exact cabling table: `docs/02-network.md`.
 
 | Node | LAN (1 GbE, vmbr0) | Ceph mesh (10 GbE) |
 |------|--------------------|--------------------|
-| node1 | 192.168.1.11 | 10.10.10.11 |
-| node2 | 192.168.1.12 | 10.10.10.12 |
-| node3 | 192.168.1.13 | 10.10.10.13 |
+| node1 | 10.0.0.11 | 10.10.10.11 |
+| node2 | 10.0.0.12 | 10.10.10.12 |
+| node3 | 10.0.0.13 | 10.10.10.13 |
 
 (Adjust the LAN side to your actual subnet; keep it in `scripts/cluster.env`.)
 

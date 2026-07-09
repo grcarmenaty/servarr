@@ -102,11 +102,13 @@ pveceph pool create vm-pool    --crush_rule fast --add_storages
 pveceph pool create media-pool --crush_rule bulk --add_storages
 ```
 
-## 6. CephFS (optional but great for a media server)
+## 6. CephFS (optional)
 
 RBD gives VMs block disks; **CephFS** is a shared POSIX filesystem all
-nodes and VMs can mount simultaneously — ideal for a media library that
-containers/VMs on any node need to reach, and for ISOs/templates/backups.
+*nodes* can mount simultaneously — handy for ISOs, container templates,
+backups, and snippets visible from every node. (The media library itself
+lives on an RBD data disk inside the servarr VM — see `docs/08` — since
+VMs on the LAN can't reach the Ceph mesh directly.)
 
 ```bash
 # MDS on every node (1 active + 2 standby)

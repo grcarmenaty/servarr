@@ -46,8 +46,8 @@ Repeat for node2 and node3 with their respective hostnames/IPs.
 
 ## First login
 
-Web UI: `https://192.168.1.11:8006` (accept the self-signed cert),
-user `root`, realm *Linux PAM*. Or SSH: `ssh root@192.168.1.11`.
+Web UI: `https://10.0.0.11:8006` (accept the self-signed cert),
+user `root`, realm *Linux PAM*. Or SSH: `ssh root@10.0.0.11`.
 
 The "No valid subscription" popup is normal — this cluster runs the free
 no-subscription repositories, configured next.
@@ -57,8 +57,8 @@ no-subscription repositories, configured next.
 Copy this repo's `scripts/` directory to the node and run:
 
 ```bash
-scp -r scripts root@192.168.1.11:/root/
-ssh root@192.168.1.11
+scp -r scripts root@10.0.0.11:/root/
+ssh root@10.0.0.11
 cd /root/scripts
 # edit cluster.env first if you haven't
 bash 01-post-install.sh

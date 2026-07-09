@@ -15,7 +15,7 @@ UI, shared configuration, and quorum-based membership (corosync).
 
 ```bash
 bash 02-create-cluster.sh create
-# equivalent to: pvecm create homelab --link0 192.168.1.11 --link1 10.10.10.11
+# equivalent to: pvecm create homelab --link0 10.0.0.11 --link1 10.10.10.11
 ```
 
 Corosync gets **two** heartbeat links: link0 on the LAN, link1 on the
@@ -33,7 +33,7 @@ On **node2** (then repeat on node3):
 
 ```bash
 bash 02-create-cluster.sh join
-# equivalent to: pvecm add 192.168.1.11 --link0 <this-LAN-ip> --link1 <this-mesh-ip>
+# equivalent to: pvecm add 10.0.0.11 --link0 <this-LAN-ip> --link1 <this-mesh-ip>
 ```
 
 - Confirm the fingerprint, enter node1's root password.

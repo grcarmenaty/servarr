@@ -85,9 +85,10 @@ non-Ceph disk.
 |-------|------|---------|-----|
 | Reverse proxy / DNS (AdGuard, Traefik…) | LXC | vm-pool | yes |
 | Home automation | VM/LXC | vm-pool | yes |
-| Docker VM for the *arr stack + downloaders | VM | vm-pool (root) + cephfs mount (media) | yes |
-| Media server (Jellyfin/Plex) | VM/LXC | vm-pool (root) + cephfs mount (media) | optional |
+| **servarr VM** — Jellyfin + *arrs + downloader (`docs/08`) | VM | vm-pool (root + media data disk) | yes |
 | Playground / test VMs | VM | vm-pool | no |
 
-The media library lives on CephFS, mounted by whichever guests need it —
-so any node can run the media stack, and HA moves it freely.
+The whole media stack — server, *arrs, downloads, and the library
+itself — lives in the servarr VM on Ceph-backed disks, so any node can
+run it and HA moves it freely. Build it with
+`scripts/10-create-servarr-vm.sh`.

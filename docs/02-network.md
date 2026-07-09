@@ -4,7 +4,7 @@ Three networks, three jobs:
 
 | Network | Interface | Carries |
 |---------|-----------|---------|
-| LAN 192.168.1.0/24 | 1 GbE → `vmbr0` | web UI, SSH, VM/container traffic, internet, corosync link0 |
+| LAN 10.0.0.0/24 | 1 GbE → `vmbr0` | web UI, SSH, VM/container traffic, internet, corosync link0 |
 | Ceph mesh 10.10.10.0/24 | 2× 10 GbE, direct cables | Ceph public+replication, live migration, corosync link1 |
 | (no third network) | — | — |
 
@@ -16,9 +16,9 @@ the cluster and Ceph exist is painful. Record your real values in
 
 | Node | Hostname | LAN (vmbr0) | Ceph mesh |
 |------|----------|-------------|-----------|
-| node1 | node1.home.lan | 192.168.1.11 | 10.10.10.11 |
-| node2 | node2.home.lan | 192.168.1.12 | 10.10.10.12 |
-| node3 | node3.home.lan | 192.168.1.13 | 10.10.10.13 |
+| node1 | node1.home.lan | 10.0.0.11 | 10.10.10.11 |
+| node2 | node2.home.lan | 10.0.0.12 | 10.10.10.12 |
+| node3 | node3.home.lan | 10.0.0.13 | 10.10.10.13 |
 
 - LAN IPs must be **static** (set in the installer).
 - The mesh subnet has no gateway, no DHCP, no switch — it exists only on
@@ -102,8 +102,8 @@ iface enp3s0 inet manual
 
 auto vmbr0
 iface vmbr0 inet static
-    address 192.168.1.11/24
-    gateway 192.168.1.1
+    address 10.0.0.11/24
+    gateway 10.0.0.254
     bridge-ports enp3s0
     bridge-stp off
     bridge-fd 0
@@ -132,9 +132,9 @@ external DNS. `01-post-install.sh` writes this from `cluster.env`:
 
 ```
 127.0.0.1 localhost
-192.168.1.11 node1.home.lan node1
-192.168.1.12 node2.home.lan node2
-192.168.1.13 node3.home.lan node3
+10.0.0.11 node1.home.lan node1
+10.0.0.12 node2.home.lan node2
+10.0.0.13 node3.home.lan node3
 ```
 
 ## Verification checklist
@@ -143,7 +143,7 @@ From **each** node, after cabling and running the mesh script:
 
 ```bash
 # LAN
-ping -c2 192.168.1.11 && ping -c2 192.168.1.12 && ping -c2 192.168.1.13
+ping -c2 10.0.0.11 && ping -c2 10.0.0.12 && ping -c2 10.0.0.13
 # mesh — both peers, each via its own cable
 ping -c2 10.10.10.11 && ping -c2 10.10.10.12 && ping -c2 10.10.10.13
 # jumbo frames actually pass (8972 = 9000 - 28 header)

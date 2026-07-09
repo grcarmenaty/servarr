@@ -26,13 +26,13 @@ the 1 GbE carries LAN/internet/VM traffic.
 
 ```
                      ┌──────────────┐
-                     │  Router/LAN  │ 192.168.1.0/24
+                     │  Router/LAN  │ 10.0.0.0/24
                      └──────┬───────┘ (1 GbE per node)
            ┌────────────────┼────────────────┐
            │                │                │
      ┌─────┴─────┐    ┌─────┴─────┐    ┌─────┴─────┐
      │   node1   │    │   node2   │    │   node3   │
-     │ .1.11     │    │ .1.12     │    │ .1.13     │
+     │ 10.0.0.11 │    │ 10.0.0.12 │    │ 10.0.0.13 │
      │ mon+mgr   │    │ mon+mgr   │    │ mon+mgr   │
      │ 5× osd    │    │ 5× osd    │    │ 5× osd    │
      └──┬─────┬──┘    └──┬─────┬──┘    └──┬─────┬──┘
@@ -58,8 +58,10 @@ triple-replicated, ~6.3 TB safe working set.
 | `docs/05-ceph.md` | Installing Ceph, monitors, OSDs, pools, CephFS |
 | `docs/06-ha-and-vms.md` | VM storage, live migration, high availability |
 | `docs/07-troubleshooting.md` | Common failure modes on small/old hardware |
+| `docs/08-servarr-stack.md` | Deploying the media stack (Jellyfin + *arrs) on the cluster |
 | `scripts/cluster.env` | Single config file — edit this first |
 | `scripts/*.sh` | Setup scripts, numbered in execution order |
+| `servarr/` | Docker Compose stack + bootstrap for the media VM |
 
 ## Setup order
 
@@ -72,7 +74,9 @@ triple-replicated, ~6.3 TB safe working set.
 5. Form the cluster (`docs/04-cluster.md` / `scripts/02-create-cluster.sh`).
 6. Set up Ceph (`docs/05-ceph.md` / scripts `03`–`05`).
 7. Configure HA and create your first VMs (`docs/06-ha-and-vms.md`).
-8. Verify with `scripts/99-health-check.sh` at any point.
+8. Deploy the media stack (`docs/08-servarr-stack.md` /
+   `scripts/10-create-servarr-vm.sh` + `servarr/`).
+9. Verify with `scripts/99-health-check.sh` at any point.
 
 ## Golden rules for a 3-node Ceph homelab
 
