@@ -64,12 +64,15 @@ triple-replicated, ~6.3 TB safe working set.
 | `docs/11-photos.md` | Immich photo backup VM |
 | `docs/12-software-catalog.md` | Full software inventory: licenses, repos, links, FOSS audit |
 | `docs/13-security-and-network-monitoring.md` | Threat model, hardening, firewall, traffic monitoring |
+| `docs/14-wazuh-siem.md` | Wazuh SIEM: agents everywhere, FIM, CVE + CIS scanning |
+| `docs/15-remote-desktops.md` | Dynamic desktop VMs + Guacamole browser portal |
 | `scripts/cluster.env` | Single config file — edit this first |
 | `scripts/*.sh` | Setup scripts, numbered in execution order |
 | `scripts/core/` | Provisioning scripts + configs for the core service LXCs |
 | `servarr/` | Docker Compose stack + bootstrap for the media VM |
 | `cloud/` | Compose stacks for the cloud tier (`data/` + `app/` × 2 VMs) |
 | `photos/` | Bootstrap for the Immich VM (fetches Immich's official compose) |
+| `wazuh/` | Bootstrap for the Wazuh VM (official single-node deployment) |
 
 ## Setup order
 
@@ -96,7 +99,10 @@ triple-replicated, ~6.3 TB safe working set.
     anti-affinity for the Nextcloud and DNS pairs (`docs/06`).
 13. Harden + monitor: scripts `21`–`23` — fail2ban, cluster firewall,
     ntopng traffic monitoring (`docs/13`).
-14. Verify with `scripts/99-health-check.sh` at any point.
+14. Wazuh SIEM + agents everywhere (`docs/14` / scripts `15` + `25` +
+    `wazuh/`).
+15. Verify with `scripts/99-health-check.sh` at any point. Desktop VMs
+    on demand anytime: `scripts/30-create-desktop-vm.sh` (`docs/15`).
 
 ## Golden rules for a 3-node Ceph homelab
 

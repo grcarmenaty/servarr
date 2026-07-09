@@ -20,6 +20,8 @@ rationale in docs/08), one optional VM, and some policy.
 | cloud-data — Postgres/Redis/NFS + Firefly (docs/10) | VM | 202 | 10.0.0.22 | `http://money.home.lan` |
 | cloud1 + cloud2 — Nextcloud app pair (docs/10) | VM ×2 | 203/204 | 10.0.0.23/.24 | `http://cloud.home.lan` |
 | photos — Immich (docs/11) | VM | 205 | 10.0.0.25 | `http://photos.home.lan` |
+| wazuh — SIEM (docs/14) | VM | 206 | 10.0.0.26 | `http://siem.home.lan` |
+| desktop VMs — on demand (docs/15) | VM | 300+ | DHCP | `http://desktop.home.lan` (Guacamole) |
 
 After everything exists, `bash scripts/20-enable-ha.sh` enrolls it all
 in HA and adds the anti-affinity rules (Nextcloud pair, DNS pair) — the

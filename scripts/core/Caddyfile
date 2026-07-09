@@ -34,6 +34,20 @@ http://traffic.@DOMAIN@ {
 	reverse_proxy @NODE1_IP@:3000
 }
 
+# Wazuh dashboard (self-signed HTTPS backend — docs/14)
+http://siem.@DOMAIN@ {
+	reverse_proxy https://@WAZUH_IP@:443 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}
+
+# Guacamole remote-desktop portal (docs/15)
+http://desktop.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8085
+}
+
 # ── media stack (servarr VM) ───────────────────────────────────────────────
 http://jellyfin.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:8096

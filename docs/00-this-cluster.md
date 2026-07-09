@@ -120,3 +120,7 @@ and the exact cabling table: `docs/02-network.md`.
 15. `scripts/21-harden-nodes.sh` (each node) + `scripts/22-enable-firewall.sh`
     (once) + `scripts/23-install-ntopng.sh` (each node) → security &
     network monitoring (`docs/13`).
+16. `scripts/15-create-wazuh-vm.sh --ha` + `scripts/25-install-wazuh-agent.sh`
+    everywhere → SIEM (`docs/14`).
+17. Anytime: `scripts/30-create-desktop-vm.sh <name>` → disposable
+    graphical desktops via RDP/Guacamole (`docs/15`).

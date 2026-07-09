@@ -56,6 +56,7 @@ render() { # render <src> <dst>
         -e "s|@KUMA_IP@|${CORE_LXC_IPS[3]}|g" \
         -e "s|@NTFY_IP@|${CORE_LXC_IPS[5]}|g" \
         -e "s|@PHOTOS_IP@|${PHOTOS_IP}|g" \
+        -e "s|@WAZUH_IP@|${WAZUH_IP}|g" \
         -e "s|@NODE1_IP@|${NODE_IPS[0]}|g" \
         -e "s|@WG_ENDPOINT@|${WG_ENDPOINT}|g" \
         -e "s|@WG_SUBNET@|${WG_SUBNET}|g" \

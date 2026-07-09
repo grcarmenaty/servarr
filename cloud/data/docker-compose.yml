@@ -16,6 +16,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       FIREFLY_DB_PASSWORD: ${FIREFLY_DB_PASSWORD}
       PAPERLESS_DB_PASSWORD: ${PAPERLESS_DB_PASSWORD}
+      GUACAMOLE_DB_PASSWORD: ${GUACAMOLE_DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -36,6 +37,31 @@ services:
     command: valkey-server --requirepass ${REDIS_PASSWORD}
     ports:
       - "6379:6379"
+
+  # ── Apache Guacamole (browser remote-desktop portal — docs/15) ─────────
+  guacd:
+    image: guacamole/guacd:latest
+    container_name: guacd
+    restart: unless-stopped
+
+  guacamole:
+    image: guacamole/guacamole:latest
+    container_name: guacamole
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      guacd:
+        condition: service_started
+    environment:
+      GUACD_HOSTNAME: guacd
+      POSTGRESQL_HOSTNAME: db
+      POSTGRESQL_DATABASE: guacamole
+      POSTGRESQL_USERNAME: guacamole
+      POSTGRESQL_PASSWORD: ${GUACAMOLE_DB_PASSWORD}
+      WEBAPP_CONTEXT: ROOT
+    ports:
+      - "8085:8080"
 
   # ── Paperless-ngx (document archive: scan, OCR, search) ────────────────
   paperless:

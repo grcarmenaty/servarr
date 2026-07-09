@@ -8,4 +8,6 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<EO
     CREATE DATABASE firefly OWNER firefly;
     CREATE USER paperless WITH PASSWORD '${PAPERLESS_DB_PASSWORD}';
     CREATE DATABASE paperless OWNER paperless;
+    CREATE USER guacamole WITH PASSWORD '${GUACAMOLE_DB_PASSWORD}';
+    CREATE DATABASE guacamole OWNER guacamole;
 EOSQL

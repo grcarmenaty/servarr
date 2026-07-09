@@ -29,6 +29,11 @@ AGPL option, but Valkey is the clean community answer.)
 | fail2ban | SSH/UI brute-force bans | GPL-2.0+ | [github.com/fail2ban/fail2ban](https://github.com/fail2ban/fail2ban) | [docs](https://fail2ban.readthedocs.io) |
 | Proxmox VE firewall | host-level packet filter | AGPL-3.0 (part of PVE) | [git.proxmox.com](https://git.proxmox.com/?p=pve-firewall.git) | [wiki](https://pve.proxmox.com/wiki/Firewall) |
 | ntopng (community) | network traffic analysis per node | GPL-3.0 | [github.com/ntop/ntopng](https://github.com/ntop/ntopng) | [ntop.org](https://www.ntop.org/products/traffic-analysis/ntop/) · [docs](https://www.ntop.org/guides/ntopng/) |
+| Wazuh | SIEM / host IDS / vuln detection | GPL-2.0 (manager); Apache-2.0 (indexer/dashboard) | [github.com/wazuh/wazuh](https://github.com/wazuh/wazuh) · [wazuh-docker](https://github.com/wazuh/wazuh-docker) | [wazuh.com](https://wazuh.com) · [docs](https://documentation.wazuh.com) |
+| Apache Guacamole | browser RDP/VNC/SSH portal | Apache-2.0 | [github.com/apache/guacamole-server](https://github.com/apache/guacamole-server) | [guacamole.apache.org](https://guacamole.apache.org) |
+| xrdp | RDP server in desktop VMs | Apache-2.0 | [github.com/neutrinolabs/xrdp](https://github.com/neutrinolabs/xrdp) | [xrdp.org](http://xrdp.org) |
+| Xfce | desktop environment in desktop VMs | GPL/LGPL | [gitlab.xfce.org](https://gitlab.xfce.org) | [xfce.org](https://xfce.org) |
+| noVNC / SPICE | in-browser + rich VM consoles (part of PVE) | MPL-2.0 / LGPL | [github.com/novnc/noVNC](https://github.com/novnc/noVNC) · [spice-space.org](https://www.spice-space.org) | [virt-viewer](https://virt-manager.org) |
 
 ## Core services (LXCs 101–106)
 
