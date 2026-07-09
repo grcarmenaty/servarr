@@ -1,7 +1,8 @@
 # 00 — This Cluster: Concrete Build Plan
 
 The generic docs (01–07) explain the *why*; this page is the actual plan
-for our hardware.
+for our hardware. The executable step-by-step version — with installer
+parameters and checkpoints — is **`RUNBOOK.md`** at the repo root.
 
 ## Node inventory (×3, identical or near-identical)
 

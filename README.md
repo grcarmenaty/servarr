@@ -4,6 +4,11 @@ Infrastructure documentation and setup scripts for a 3-node hyperconverged
 home server cluster built from salvaged/scrap hardware, running
 **Proxmox VE** with **Ceph** as shared storage.
 
+> **Building it? Start with [`RUNBOOK.md`](RUNBOOK.md)** — the complete
+> step-by-step from bare metal to every service running, with exact
+> installer parameters and a checkpoint after every phase. The `docs/`
+> pages are the per-topic deep dives it links into.
+
 ## Why this architecture
 
 With exactly 3 nodes you get the smallest cluster that is actually a real
@@ -50,7 +55,8 @@ triple-replicated, ~6.3 TB safe working set.
 
 | Path | Contents |
 |------|----------|
-| `docs/00-this-cluster.md` | **The concrete build plan for our actual hardware — start here** |
+| `RUNBOOK.md` | **The full build, step by step, with checkpoints — start here** |
+| `docs/00-this-cluster.md` | The concrete hardware/network/capacity plan behind the runbook |
 | `docs/01-hardware.md` | General hardware guidance for scrap/salvage builds (reference) |
 | `docs/02-network.md` | IP plan, `vmbr0`, the 10 GbE full-mesh Ceph network, `/etc/network/interfaces` examples |
 | `docs/03-proxmox-install.md` | Installing Proxmox VE on each node, post-install steps |
