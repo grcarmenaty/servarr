@@ -197,6 +197,11 @@ or one big one if the nodes share a circuit) buys clean shutdowns:
   each *arr (enable auth in their Settings → General).
 - Torrent traffic goes through gluetun's kill switch (docs/08).
 
+The full picture — threat model, fail2ban, the cluster firewall,
+ntopng/DNS-level network monitoring, and the quarterly checklist —
+lives in **`docs/13-security-and-network-monitoring.md`**
+(scripts `21`–`23`).
+
 ## Extras and where future services should go
 
 Two ready to enable now in the servarr VM

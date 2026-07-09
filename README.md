@@ -63,6 +63,7 @@ triple-replicated, ~6.3 TB safe working set.
 | `docs/10-cloud-stack.md` | Load-balanced 2×Nextcloud, Firefly III, Paperless-ngx |
 | `docs/11-photos.md` | Immich photo backup VM |
 | `docs/12-software-catalog.md` | Full software inventory: licenses, repos, links, FOSS audit |
+| `docs/13-security-and-network-monitoring.md` | Threat model, hardening, firewall, traffic monitoring |
 | `scripts/cluster.env` | Single config file — edit this first |
 | `scripts/*.sh` | Setup scripts, numbered in execution order |
 | `scripts/core/` | Provisioning scripts + configs for the core service LXCs |
@@ -93,7 +94,9 @@ triple-replicated, ~6.3 TB safe working set.
     `photos/`).
 12. `bash scripts/20-enable-ha.sh` — HA-enroll everything, with
     anti-affinity for the Nextcloud and DNS pairs (`docs/06`).
-13. Verify with `scripts/99-health-check.sh` at any point.
+13. Harden + monitor: scripts `21`–`23` — fail2ban, cluster firewall,
+    ntopng traffic monitoring (`docs/13`).
+14. Verify with `scripts/99-health-check.sh` at any point.
 
 ## Golden rules for a 3-node Ceph homelab
 

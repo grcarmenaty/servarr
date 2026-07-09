@@ -29,6 +29,11 @@ http://status.@DOMAIN@ {
 	reverse_proxy @KUMA_IP@:3001
 }
 
+# ntopng on node1 (each node has its own instance on :3000 — docs/13)
+http://traffic.@DOMAIN@ {
+	reverse_proxy @NODE1_IP@:3000
+}
+
 # ── media stack (servarr VM) ───────────────────────────────────────────────
 http://jellyfin.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:8096

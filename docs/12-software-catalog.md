@@ -26,6 +26,9 @@ AGPL option, but Valkey is the clean community answer.)
 | cloud-init | VM first-boot config | GPL-3.0/Apache-2.0 | [github.com/canonical/cloud-init](https://github.com/canonical/cloud-init) | [docs](https://cloudinit.readthedocs.io) |
 | Proxmox Backup Server *(planned, docs/09)* | dedup backups | AGPL-3.0 | [git.proxmox.com](https://git.proxmox.com/?p=proxmox-backup.git) | [proxmox.com/pbs](https://www.proxmox.com/en/products/proxmox-backup-server/overview) |
 | NUT *(when UPS arrives)* | UPS monitoring/shutdown | GPL-2.0+ | [github.com/networkupstools/nut](https://github.com/networkupstools/nut) | [networkupstools.org](https://networkupstools.org) |
+| fail2ban | SSH/UI brute-force bans | GPL-2.0+ | [github.com/fail2ban/fail2ban](https://github.com/fail2ban/fail2ban) | [docs](https://fail2ban.readthedocs.io) |
+| Proxmox VE firewall | host-level packet filter | AGPL-3.0 (part of PVE) | [git.proxmox.com](https://git.proxmox.com/?p=pve-firewall.git) | [wiki](https://pve.proxmox.com/wiki/Firewall) |
+| ntopng (community) | network traffic analysis per node | GPL-3.0 | [github.com/ntop/ntopng](https://github.com/ntop/ntopng) | [ntop.org](https://www.ntop.org/products/traffic-analysis/ntop/) · [docs](https://www.ntop.org/guides/ntopng/) |
 
 ## Core services (LXCs 101–106)
 
@@ -103,6 +106,9 @@ everything still runs, minus that convenience.
 | Wallabag | read-it-later | MIT | [github](https://github.com/wallabag/wallabag) · [wallabag.org](https://wallabag.org) | same |
 | Grafana + Prometheus | deep metrics/dashboards | AGPL-3.0 / Apache-2.0 | [grafana](https://github.com/grafana/grafana) · [prometheus](https://github.com/prometheus/prometheus) | Proxmox graphs + Kuma cover the need; add for fun |
 | Headscale | self-hosted Tailscale control plane | BSD-3 | [github](https://github.com/juanfont/headscale) | WireGuard covers remote access; relevant if CGNAT ever forces Tailscale-style NAT traversal |
+| CrowdSec | collaborative IPS | MIT | [github](https://github.com/crowdsecurity/crowdsec) · [crowdsec.net](https://www.crowdsec.net) | overkill with one exposed UDP port; add if you ever publish services |
+| OPNsense | firewall/router OS (VLANs, Suricata IDS, whole-LAN visibility) | BSD-2 | [github](https://github.com/opnsense/core) · [opnsense.org](https://opnsense.org) | replaces the ISP router — a project of its own (docs/13) |
+| LibreNMS | SNMP network monitoring | GPL-3.0 | [github](https://github.com/librenms/librenms) · [librenms.org](https://www.librenms.org) | valuable once a managed switch exists |
 | Pi-hole | AdGuard alternative | EUPL-1.2 | [github](https://github.com/pi-hole/pi-hole) · [pi-hole.net](https://pi-hole.net) | AdGuard Home chosen (single binary, DoH out of the box) |
 
 Placement rule of thumb when adding from this list: web app with a
