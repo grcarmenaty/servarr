@@ -129,9 +129,65 @@ user (`force user`), so *arr hardlinks keep working.
 
 ## Firefly III first run
 
-`http://money.home.lan` → register (**first account = owner**). The
-importer at `money-import.home.lan` needs a Personal Access Token from
-Firefly's *Options → Profile → OAuth*.
+`http://money.home.lan` → register (**first account = owner**), create
+your asset accounts, then wire up your banks below.
+
+## Connecting your banks
+
+The Data Importer (`http://money-import.home.lan`) is pre-wired for
+three providers — between them, essentially every bank you can hold:
+
+| Provider | Coverage | Status |
+|----------|----------|--------|
+| **Enable Banking** | ~2,500 EEA banks — Revolut, N26, BBVA, Santander, CaixaBank, ING, bunq… | primary; free "restricted mode" for your own accounts |
+| GoCardless Bank Account Data | similar EEA coverage | legacy — only if you already hold an account (new signups restricted) |
+| CSV / camt.053 files | **any bank on earth** | universal fallback; most banks export CSV |
+
+(Salt Edge/Spectre lost its free tier in late 2025 and is being removed
+from the importer — ignore older guides recommending it.)
+
+### Enable Banking setup (once)
+
+1. Register at [enablebanking.com](https://enablebanking.com) → create
+   an **application** (redirect URL: `http://money-import.home.lan/`) —
+   you get an *Application ID* and a private **PEM key**.
+2. On cloud-data, drop the key at
+   `/opt/cloud/config/firefly-importer/keys/enablebanking.pem`, then in
+   `.env` set `ENABLE_BANKING_APP_ID=...` and uncomment
+   `ENABLE_BANKING_PRIVATE_KEY_FILE=/keys/enablebanking.pem`.
+3. In Firefly (*Options → Profile → OAuth*) create a **Personal Access
+   Token** → paste into `.env` as `FIREFLY_ACCESS_TOKEN`.
+4. `docker compose up -d` to reload the importer.
+
+Per bank: importer UI → *Enable Banking* → pick the bank → approve in
+the bank's own app/site → map accounts → import. At the end, **save the
+import configuration** — download the JSON and drop it into
+`/opt/cloud/config/firefly-importer/import/`.
+
+### Automatic daily sync
+
+Bootstrap installed a cron job that hits the importer's `/autoimport`
+endpoint at **06:30 daily** — every saved JSON config in the `import/`
+dir re-runs unattended, and Firefly's duplicate detection keeps
+overlapping pulls harmless. So: connect each bank once through the UI,
+save its config, and transactions flow in every morning.
+
+PSD2 realities that apply to *any* provider (not the importer's fault):
+
+- Bank consents expire every **90–180 days** — the bank stops answering
+  until you re-approve in the importer UI. Set a recurring reminder (or
+  add an Uptime Kuma "push" monitor the cron pings on success — it'll
+  alert when imports quietly stop).
+- Free tiers rate-limit polling to a few syncs per account per day —
+  once daily is exactly the intended cadence.
+
+### Banks that resist (or non-EEA)
+
+Export CSV from the bank's app → importer UI → *File import*. The first
+run you map columns by hand; save the config and subsequent statements
+are two clicks (or drop the CSV next to its config in `import/` and let
+the nightly run eat it). Works for literally any bank, brokerage, or
+crypto exchange that can produce a CSV.
 
 ## Upgrades — the one multi-instance gotcha
 

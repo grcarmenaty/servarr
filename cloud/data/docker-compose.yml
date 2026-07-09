@@ -58,6 +58,9 @@ services:
     volumes:
       - ${CONFIG_ROOT}/firefly/upload:/var/www/html/storage/upload
 
+  # Bank connectivity lives here: Enable Banking (thousands of EEA banks,
+  # incl. Revolut), legacy GoCardless, and CSV — see docs/10 "Connecting
+  # your banks". A host cron job hits /autoimport daily (bootstrap.sh).
   firefly-importer:
     image: fireflyiii/data-importer:latest
     container_name: firefly-importer
@@ -68,5 +71,23 @@ services:
       FIREFLY_III_URL: http://firefly:8080
       VANITY_URL: http://money.home.lan
       TZ: ${TZ:-Etc/UTC}
+      # Personal Access Token (Firefly → Options → Profile → OAuth) —
+      # required for scheduled auto-imports; UI-driven imports work without
+      FIREFLY_III_ACCESS_TOKEN: ${FIREFLY_ACCESS_TOKEN:-}
+      # Enable Banking — primary provider
+      ENABLE_BANKING_APP_ID: ${ENABLE_BANKING_APP_ID:-}
+      ENABLE_BANKING_PRIVATE_KEY_FILE: ${ENABLE_BANKING_PRIVATE_KEY_FILE:-}
+      ENABLE_BANKING_IMPORT_IP: autodetect
+      # GoCardless — legacy, only if you already hold an account
+      NORDIGEN_ID: ${NORDIGEN_ID:-}
+      NORDIGEN_KEY: ${NORDIGEN_KEY:-}
+      RESPOND_TO_GOCARDLESS_LIMIT: wait
+      # Scheduled imports of saved import configs in /import
+      AUTO_IMPORT_SECRET: ${AUTO_IMPORT_SECRET}
+      CAN_POST_AUTOIMPORT: "true"
+      IMPORT_DIR_ALLOWLIST: /import
     ports:
       - "8081:8080"
+    volumes:
+      - ${CONFIG_ROOT}/firefly-importer/keys:/keys:ro
+      - ${CONFIG_ROOT}/firefly-importer/import:/import

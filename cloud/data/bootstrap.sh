@@ -79,10 +79,21 @@ if [[ ! -f .env ]]; then
         -e "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=$(rand 32)|" \
         -e "s|^FIREFLY_DB_PASSWORD=.*|FIREFLY_DB_PASSWORD=$(rand 32)|" \
         -e "s|^FIREFLY_APP_KEY=.*|FIREFLY_APP_KEY=$(rand 32)|" \
+        -e "s|^AUTO_IMPORT_SECRET=.*|AUTO_IMPORT_SECRET=$(rand 32)|" \
         .env
     chown "$LOGIN_USER:$LOGIN_USER" .env
     chmod 600 .env
 fi
+
+# ── 5. Bank auto-import: dirs + daily cron ───────────────────────────────
+log "Preparing importer dirs + daily bank auto-import (06:30)"
+mkdir -p "${CONFIG_ROOT}/firefly-importer/keys" "${CONFIG_ROOT}/firefly-importer/import"
+cat > /etc/cron.d/firefly-autoimport <<EOF
+# Daily bank sync: runs every saved import config in the importer's /import
+# dir (no-op until you save some — docs/10 "Connecting your banks")
+30 6 * * * root cd $(pwd) && . ./.env && curl -sf "http://localhost:8081/autoimport?directory=/import&secret=\${AUTO_IMPORT_SECRET}" >/dev/null 2>&1
+EOF
+chmod 644 /etc/cron.d/firefly-autoimport
 
 echo
 log "Bootstrap done. Start the services (as ${LOGIN_USER}, after re-login):"
