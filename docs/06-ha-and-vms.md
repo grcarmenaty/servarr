@@ -91,4 +91,31 @@ non-Ceph disk.
 The whole media stack — server, *arrs, downloads, and the library
 itself — lives in the servarr VM on Ceph-backed disks, so any node can
 run it and HA moves it freely. Everything above is created by scripts
-`10`–`12`.
+`10`–`13`.
+
+## Cluster-wide HA policy
+
+`scripts/20-enable-ha.sh` enrolls **every** guest into HA and adds
+anti-affinity rules so the redundant pairs never share a node. What
+"highly available" then actually means, per service:
+
+| Service | Redundancy | Node dies → outage |
+|---------|-----------|--------------------|
+| Nextcloud app tier | 2 instances, ≠ nodes, load-balanced | **none** (seconds of health-check lag) |
+| DNS (AdGuard ×2) | 2 instances, ≠ nodes, both in DHCP | **none** (clients use the second resolver) |
+| Ceph storage | 3-way replication | none (degraded until healed) |
+| Proxmox cluster | 3-node quorum | none |
+| cloud-data (DB/NFS) | HA restart | ~2–3 min (Nextcloud stalls, resumes) |
+| Jellyfin / *arrs / HAOS | HA restart | ~2–3 min |
+| Caddy, WireGuard, Kuma | HA restart | ~1–2 min (LXCs restart fast) |
+
+The restart tier is a genuine limit of single-instance software, not of
+the cluster: Jellyfin, Home Assistant, and Postgres can't run
+active-active without heavyweight machinery. A self-healing ~2-minute
+restart with zero human involvement is the honest ceiling — and testing
+it (hard-reset a node, watch it recover) is what turns "should work"
+into "guaranteed".
+
+Capacity check for full-node absorption: HA-protected RAM is
+servarr 16 + cloud tier 12 + HAOS 4 + LXCs ~4 ≈ **36 GB**, against
+~80 GB of headroom on two surviving nodes. Comfortable.

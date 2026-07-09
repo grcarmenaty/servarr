@@ -62,17 +62,25 @@ http://audiobooks.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:13378
 }
 
-# ── cloud stack (cloud VM — Nextcloud + Firefly III) ───────────────────────
+# ── cloud tier — Nextcloud load-balanced across two app VMs ────────────────
+# Sessions live in Redis, so no sticky sessions needed; health checks drop a
+# dead backend within seconds and all traffic flows to the survivor.
 http://cloud.@DOMAIN@ {
-	reverse_proxy @CLOUD_IP@:8080
+	reverse_proxy @CLOUD1_IP@:8080 @CLOUD2_IP@:8080 {
+		lb_policy least_conn
+		lb_try_duration 5s
+		fail_duration 15s
+		health_uri /status.php
+		health_interval 10s
+	}
 }
 
 http://money.@DOMAIN@ {
-	reverse_proxy @CLOUD_IP@:8082
+	reverse_proxy @CLOUDDATA_IP@:8082
 }
 
 http://money-import.@DOMAIN@ {
-	reverse_proxy @CLOUD_IP@:8081
+	reverse_proxy @CLOUDDATA_IP@:8081
 }
 
 # ── home automation (optional HAOS VM) ─────────────────────────────────────

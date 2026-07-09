@@ -1,0 +1,44 @@
+# Nextcloud app server — runs identically on cloud1 AND cloud2
+# (docs/10-cloud-stack.md). All state is external: code+config+data on NFS
+# from cloud-data, database in its Postgres, sessions/locks in its Redis —
+# so both instances serve the same Nextcloud and Caddy load-balances them.
+#
+# The cron container runs on cloud1 only (bootstrap.sh sets
+# COMPOSE_PROFILES=cron there).
+
+services:
+  nextcloud:
+    build: ./nextcloud
+    image: nextcloud-smb:local
+    container_name: nextcloud
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: ${CLOUDDATA_IP}
+      POSTGRES_DB: nextcloud
+      POSTGRES_USER: nextcloud
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: ${CLOUDDATA_IP}
+      REDIS_HOST_PASSWORD: ${REDIS_PASSWORD}
+      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
+      NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_TRUSTED_DOMAINS}
+      TRUSTED_PROXIES: ${CADDY_IP}
+      PHP_UPLOAD_LIMIT: 16G
+      PHP_MEMORY_LIMIT: 1G
+    ports:
+      - "8080:80"
+    volumes:
+      - /mnt/nextcloud/html:/var/www/html
+      - /mnt/nextcloud/data:/var/www/html/data
+
+  nextcloud-cron:
+    profiles: ["cron"]
+    image: nextcloud-smb:local
+    container_name: nextcloud-cron
+    restart: unless-stopped
+    entrypoint: /cron.sh
+    depends_on:
+      - nextcloud
+    volumes:
+      - /mnt/nextcloud/html:/var/www/html
+      - /mnt/nextcloud/data:/var/www/html/data

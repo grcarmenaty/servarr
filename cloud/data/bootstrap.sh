@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# One-time setup inside the cloud VM: install Docker, format/mount the data
-# disk, generate .env with random secrets. Idempotent — safe to re-run.
+# One-time setup inside the cloud-data VM: Docker, data disk, NFS exports of
+# the Nextcloud html/data directories, .env with random secrets.
+# Idempotent — safe to re-run.
 #
 #   sudo bash bootstrap.sh [data-disk]     # default data disk: /dev/sdb
 
@@ -15,6 +16,8 @@ DATA_DISK="${1:-/dev/sdb}"
 DATA_MOUNT="/mnt/clouddata"
 CONFIG_ROOT="/opt/cloud/config"
 LOGIN_USER="${SUDO_USER:-cloud}"
+# LAN IPs of the Nextcloud app VMs (cluster.env: CLOUD_APP_IPS)
+APP_IPS=(10.0.0.23 10.0.0.24)
 
 rand() { openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c "$1"; }
 
@@ -45,47 +48,45 @@ if ! blkid "$DATA_DISK" >/dev/null 2>&1; then
     log "Formatting ${DATA_DISK} as XFS"
     apt-get install -y xfsprogs
     mkfs.xfs "$DATA_DISK"
-else
-    log "${DATA_DISK} already has a filesystem — keeping it"
 fi
-
 UUID="$(blkid -s UUID -o value "$DATA_DISK")"
 if ! grep -q "$UUID" /etc/fstab; then
-    log "Adding ${DATA_MOUNT} to /etc/fstab"
     mkdir -p "$DATA_MOUNT"
     echo "UUID=${UUID} ${DATA_MOUNT} xfs defaults,noatime 0 2" >> /etc/fstab
 fi
 mountpoint -q "$DATA_MOUNT" || { systemctl daemon-reload; mount "$DATA_MOUNT"; }
 
-# ── 3. Directories ───────────────────────────────────────────────────────
-log "Creating directories"
-mkdir -p "$DATA_MOUNT/nextcloud" "$CONFIG_ROOT"
-# Nextcloud runs as www-data (uid/gid 33) inside the container
-chown 33:33 "$DATA_MOUNT/nextcloud"
-chmod 750 "$DATA_MOUNT/nextcloud"
+# ── 3. Nextcloud shared directories + NFS export ─────────────────────────
+log "Creating Nextcloud shared directories (html = code+config, data = files)"
+mkdir -p "$DATA_MOUNT/nextcloud/html" "$DATA_MOUNT/nextcloud/data" "$CONFIG_ROOT"
+chown -R 33:33 "$DATA_MOUNT/nextcloud"    # www-data inside the app containers
+
+log "Installing NFS server + exporting to the app VMs"
+apt-get install -y nfs-kernel-server
+for ip in "${APP_IPS[@]}"; do
+    line="${DATA_MOUNT}/nextcloud ${ip}(rw,sync,no_subtree_check,no_root_squash)"
+    grep -qF "$line" /etc/exports || echo "$line" >> /etc/exports
+done
+exportfs -ra
+systemctl enable --now nfs-kernel-server
 
 # ── 4. Environment file with generated secrets ───────────────────────────
 if [[ ! -f .env ]]; then
     log "Generating .env with random secrets"
     cp .env.example .env
-    NC_ADMIN_PW="$(rand 20)"
     sed -i \
-        -e "s|^NEXTCLOUD_ADMIN_PASSWORD=.*|NEXTCLOUD_ADMIN_PASSWORD=${NC_ADMIN_PW}|" \
         -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(rand 32)|" \
+        -e "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=$(rand 32)|" \
         -e "s|^FIREFLY_DB_PASSWORD=.*|FIREFLY_DB_PASSWORD=$(rand 32)|" \
         -e "s|^FIREFLY_APP_KEY=.*|FIREFLY_APP_KEY=$(rand 32)|" \
         .env
     chown "$LOGIN_USER:$LOGIN_USER" .env
     chmod 600 .env
-    echo
-    log "Nextcloud admin login:  admin / ${NC_ADMIN_PW}"
-    echo "    (also stored in .env — keep it safe)"
-else
-    log ".env already exists — leaving it alone"
 fi
 
 echo
-log "Bootstrap done. Next (as ${LOGIN_USER} — re-login first for docker group):"
-echo "  docker compose up -d      # first run builds the Nextcloud+SMB image"
+log "Bootstrap done. Start the services (as ${LOGIN_USER}, after re-login):"
+echo "  docker compose up -d"
 echo
-echo "Then follow the first-run checklist in docs/10-cloud-stack.md"
+log "Copy these into BOTH app VMs' .env files (cloud/app/.env):"
+grep -E '^(POSTGRES_PASSWORD|REDIS_PASSWORD)=' .env | sed 's/^/  /'

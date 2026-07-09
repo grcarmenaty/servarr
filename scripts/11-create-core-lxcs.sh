@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Create + provision the core service LXCs (docs/09-core-services.md):
-#   adguard    DNS + ad blocking          10.0.0.5
-#   caddy      reverse proxy + portal     10.0.0.6
-#   wireguard  remote-access VPN          10.0.0.7
-#   kuma       Uptime Kuma monitoring     10.0.0.8
+#   adguard    DNS + ad blocking            10.0.0.5
+#   caddy      reverse proxy + portal       10.0.0.6
+#   wireguard  remote-access VPN            10.0.0.7
+#   kuma       Uptime Kuma monitoring       10.0.0.8
+#   adguard2   second DNS (HA pair)         10.0.0.9
 #
 # Run ONCE, on any cluster node, after Ceph storage exists:
 #   bash 11-create-core-lxcs.sh all           # everything
@@ -19,7 +20,7 @@ require_pve
 
 TARGET="${1:-}"
 HA_FLAG="${2:-}"
-[[ -n "$TARGET" ]] || die "usage: $0 all|adguard|caddy|wireguard|kuma [--ha]"
+[[ -n "$TARGET" ]] || die "usage: $0 all|adguard|caddy|wireguard|kuma|adguard2 [--ha]"
 [[ -f /etc/pve/ceph.conf ]] || die "Ceph not set up yet — LXC rootfs lives on ${VM_POOL}"
 
 # ── Debian 13 container template ──────────────────────────────────────────
@@ -43,9 +44,12 @@ fi
 render() { # render <src> <dst>
     sed -e "s|@DOMAIN@|${DOMAIN}|g" \
         -e "s|@SERVARR_IP@|${SERVARR_IP}|g" \
-        -e "s|@CLOUD_IP@|${CLOUD_IP}|g" \
+        -e "s|@CLOUDDATA_IP@|${CLOUDDATA_IP}|g" \
+        -e "s|@CLOUD1_IP@|${CLOUD_APP_IPS[0]}|g" \
+        -e "s|@CLOUD2_IP@|${CLOUD_APP_IPS[1]}|g" \
         -e "s|@HAOS_IP@|${HAOS_IP}|g" \
         -e "s|@ADGUARD_IP@|${CORE_LXC_IPS[0]}|g" \
+        -e "s|@ADGUARD2_IP@|${CORE_LXC_IPS[4]}|g" \
         -e "s|@CADDY_IP@|${CORE_LXC_IPS[1]}|g" \
         -e "s|@WIREGUARD_IP@|${CORE_LXC_IPS[2]}|g" \
         -e "s|@KUMA_IP@|${CORE_LXC_IPS[3]}|g" \
@@ -90,8 +94,9 @@ create_one() {
         || die "$name: no network/DNS inside container $id"
 
     log "$name: provisioning (this can take a few minutes)"
-    local tmp; tmp="$(mktemp -d)"
-    render "${SCRIPT_DIR}/core/provision-${name}.sh" "${tmp}/provision.sh"
+    local tmp prov; tmp="$(mktemp -d)"
+    prov="$(echo "$name" | sed 's/[0-9]*$//')"   # adguard2 → provision-adguard.sh
+    render "${SCRIPT_DIR}/core/provision-${prov}.sh" "${tmp}/provision.sh"
     pct push "$id" "${tmp}/provision.sh" /root/provision.sh
     # extra assets, service-specific
     case "$name" in

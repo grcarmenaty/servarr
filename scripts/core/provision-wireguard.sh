@@ -35,10 +35,10 @@ EOF
 
     # settings wg-add-peer needs later
     cat > /etc/wireguard/params <<EOF
-WG_NET=${WG_NET}
-WG_ENDPOINT=@WG_ENDPOINT@
-CLIENT_DNS=@ADGUARD_IP@
-LAN_NET=$(ip -o -4 addr show eth0 | awk '{print $4}' | head -1 | cut -d/ -f1 | awk -F. '{print $1"."$2"."$3".0/24"}')
+WG_NET="${WG_NET}"
+WG_ENDPOINT="@WG_ENDPOINT@"
+CLIENT_DNS="@ADGUARD_IP@, @ADGUARD2_IP@"
+LAN_NET="$(ip -o -4 addr show eth0 | awk '{print $4}' | head -1 | cut -d/ -f1 | awk -F. '{print $1"."$2"."$3".0/24"}')"
 EOF
 fi
 
@@ -49,7 +49,7 @@ install -m 0755 /root/wg-add-peer /usr/local/bin/wg-add-peer
 systemctl enable --now wg-quick@wg0
 
 echo "==> done. Add clients with:  wg-add-peer <device-name>"
-if ! grep -q '^WG_ENDPOINT=..*' /etc/wireguard/params; then
+if grep -q '^WG_ENDPOINT=""' /etc/wireguard/params; then
     echo "WARNING: WG_ENDPOINT is empty in cluster.env — client configs will need"
     echo "         the Endpoint line filled in by hand (your DDNS hostname:51820)."
 fi

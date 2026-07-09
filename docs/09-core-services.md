@@ -10,12 +10,18 @@ rationale in docs/08), one optional VM, and some policy.
 | Service | Guest | ID | IP | Entry point |
 |---------|-------|----|----|-------------|
 | AdGuard Home — DNS + ad blocking | LXC | 101 | 10.0.0.5 | `http://dns.home.lan` |
+| AdGuard Home #2 — DNS HA pair | LXC | 105 | 10.0.0.9 | `http://10.0.0.9` |
 | Caddy — reverse proxy + portal | LXC | 102 | 10.0.0.6 | `http://home.lan` |
 | WireGuard — remote access VPN | LXC | 103 | 10.0.0.7 | (UDP 51820) |
 | Uptime Kuma — monitoring/alerts | LXC | 104 | 10.0.0.8 | `http://status.home.lan` |
 | Servarr — media stack (docs/08) | VM | 200 | 10.0.0.20 | `http://jellyfin.home.lan` |
 | Home Assistant OS — smart home | VM | 201 | 10.0.0.21 | `http://hass.home.lan` |
-| Cloud — Nextcloud + Firefly III (docs/10) | VM | 202 | 10.0.0.22 | `http://cloud.home.lan` |
+| cloud-data — Postgres/Redis/NFS + Firefly (docs/10) | VM | 202 | 10.0.0.22 | `http://money.home.lan` |
+| cloud1 + cloud2 — Nextcloud app pair (docs/10) | VM ×2 | 203/204 | 10.0.0.23/.24 | `http://cloud.home.lan` |
+
+After everything exists, `bash scripts/20-enable-ha.sh` enrolls it all
+in HA and adds the anti-affinity rules (Nextcloud pair, DNS pair) — the
+full availability table is in `docs/06-ha-and-vms.md`.
 
 Create the LXCs (any node, after Ceph is up):
 
@@ -32,8 +38,14 @@ node with `pct enter <id>`.
 
 ## AdGuard Home (DNS) — finish by hand, 5 minutes
 
+Two independent instances (10.0.0.5 and 10.0.0.9) on different nodes —
+DNS clients retry the second resolver natively, so DNS survives a node
+failure with **zero** downtime, no keepalived needed.
+
 1. Open `http://10.0.0.5:3000` → wizard: web UI on port **80**, DNS on
-   **53**, set admin credentials.
+   **53**, set admin credentials. **Repeat on `http://10.0.0.9:3000`**
+   (settings below must be applied to both — they're few; or copy
+   `/opt/AdGuardHome/AdGuardHome.yaml` from one to the other and restart).
 2. *Filters → DNS rewrites* — this is what makes all the nice hostnames
    work:
 
@@ -48,10 +60,9 @@ node with `pct enter <id>`.
    (The three node entries must be explicit so they beat the wildcard.)
 3. *Settings → DNS settings* — upstreams: `https://dns.quad9.net/dns-query`
    or your preference; enable parallel requests.
-4. **Router**: set the DHCP server's DNS option to `10.0.0.5` so every
-   device on the LAN gets ad blocking and the `*.home.lan` names. Keep
-   the router itself (or Quad9) as a *secondary* DNS on devices that
-   must never break, if your router supports handing out two.
+4. **Router**: set the DHCP server's DNS options to **10.0.0.5 and
+   10.0.0.9** — every device gets ad blocking, the `*.home.lan` names,
+   and automatic failover between the two instances.
 
 The infra guests deliberately keep the router as their DNS
 (`LAN_DNS`) so DNS for the cluster itself never depends on AdGuard

@@ -1,0 +1,72 @@
+# cloud-data VM — shared state for the Nextcloud app pair, plus Firefly III.
+# (docs/10-cloud-stack.md)
+#
+# Postgres and Redis are published on the LAN for the two app VMs; the
+# Nextcloud html/data directories are exported over NFS by the VM itself
+# (set up by bootstrap.sh, not a container).
+
+services:
+  db:
+    image: postgres:17
+    container_name: cloud-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nextcloud
+      POSTGRES_USER: nextcloud
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      FIREFLY_DB_PASSWORD: ${FIREFLY_DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${CONFIG_ROOT}/postgres:/var/lib/postgresql/data
+      - ./init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextcloud"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cloud-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+
+  # ── Firefly III (personal finance — single instance lives here) ────────
+  firefly:
+    image: fireflyiii/core:latest
+    container_name: firefly
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_KEY: ${FIREFLY_APP_KEY}
+      APP_URL: http://money.home.lan
+      TRUSTED_PROXIES: "**"
+      TZ: ${TZ:-Etc/UTC}
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: firefly
+      DB_USERNAME: firefly
+      DB_PASSWORD: ${FIREFLY_DB_PASSWORD}
+    ports:
+      - "8082:8080"
+    volumes:
+      - ${CONFIG_ROOT}/firefly/upload:/var/www/html/storage/upload
+
+  firefly-importer:
+    image: fireflyiii/data-importer:latest
+    container_name: firefly-importer
+    restart: unless-stopped
+    depends_on:
+      - firefly
+    environment:
+      FIREFLY_III_URL: http://firefly:8080
+      VANITY_URL: http://money.home.lan
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+      - "8081:8080"
