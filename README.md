@@ -60,10 +60,12 @@ triple-replicated, ~6.3 TB safe working set.
 | `docs/07-troubleshooting.md` | Common failure modes on small/old hardware |
 | `docs/08-servarr-stack.md` | Deploying the media stack (Jellyfin + *arrs) on the cluster |
 | `docs/09-core-services.md` | DNS, reverse proxy, VPN, monitoring, smart home, backups, UPS |
+| `docs/10-cloud-stack.md` | Nextcloud + Firefly III VM, shared media folder, scale-out path |
 | `scripts/cluster.env` | Single config file — edit this first |
 | `scripts/*.sh` | Setup scripts, numbered in execution order |
 | `scripts/core/` | Provisioning scripts + configs for the core service LXCs |
 | `servarr/` | Docker Compose stack + bootstrap for the media VM |
+| `cloud/` | Docker Compose stack + bootstrap for the Nextcloud/Firefly VM |
 
 ## Setup order
 
@@ -81,7 +83,9 @@ triple-replicated, ~6.3 TB safe working set.
 9. Deploy the core services — DNS, proxy, VPN, monitoring, smart home
    (`docs/09-core-services.md` / scripts `11`–`12`) — and set up
    backups + UPS per the same doc.
-10. Verify with `scripts/99-health-check.sh` at any point.
+10. Deploy the cloud stack — Nextcloud + Firefly III with the shared
+    media folder (`docs/10-cloud-stack.md` / `scripts/13` + `cloud/`).
+11. Verify with `scripts/99-health-check.sh` at any point.
 
 ## Golden rules for a 3-node Ceph homelab
 

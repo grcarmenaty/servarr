@@ -30,6 +30,22 @@ services:
       - ${CONFIG_ROOT}/jellyfin:/config
       - ${DATA_ROOT}/media:/data/media
 
+  # ── audiobooks & podcasts ─────────────────────────────────────────────
+  audiobookshelf:
+    restart: unless-stopped
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+      - "13378:80"
+    volumes:
+      - ${CONFIG_ROOT}/audiobookshelf:/config
+      - ${CONFIG_ROOT}/audiobookshelf-metadata:/metadata
+      - ${DATA_ROOT}/media/audiobooks:/audiobooks
+      - ${DATA_ROOT}/media/podcasts:/podcasts
+
   # ── request management (users ask for movies/shows here) ─────────────
   jellyseerr:
     <<: *common

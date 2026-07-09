@@ -70,6 +70,36 @@ Options worth knowing:
 Verify: `ceph osd tree` shows all OSDs `up` and `in`, spread across the
 three hosts.
 
+### Encryption at rest (on by default here)
+
+`cluster.env` sets `OSD_ENCRYPT="yes"`, so `04-create-osds.sh` passes
+`--encrypted 1`: every OSD is a LUKS/dm-crypt volume. **Everything**
+stored in Ceph — VM disks, CephFS, all of it — is encrypted on the
+physical platters.
+
+How the keys work (the "encrypted but decryptable" part):
+
+- Each OSD's LUKS key is stored in the **Ceph monitor database** and
+  fetched automatically when the OSD starts. Day to day you notice
+  nothing — no passphrases, reboots just work.
+- A pulled, failed, or discarded disk is unreadable garbage. RMA and
+  dumpster disposal become a non-event.
+- The threat model is disk theft/disposal, **not** whole-cluster theft:
+  whoever boots your intact cluster has the data. Full paranoia would
+  need encrypted OS disks + manual unlock at boot — not worth it here.
+- **Key escrow, do this once** after all OSDs exist:
+  `ceph config-key dump | grep dm-crypt` and store the output somewhere
+  safe *off the cluster* (password manager). If all three OS disks died
+  simultaneously while data disks survived, that dump is what makes the
+  data recoverable.
+- Cost: one AES pass per write — negligible on Ryzen (AES-NI), the HDDs
+  are the bottleneck long before the crypto is.
+
+Encryption in transit: LAN traffic is trusted; anything remote comes in
+through WireGuard (docs/09), which is encrypted end-to-end. Backups
+leaving the cluster should be encrypted too — PBS client-side
+encryption or a LUKS-formatted USB target (docs/09).
+
 ### Low-RAM nodes (≤ 8–16 GB)
 
 ```bash

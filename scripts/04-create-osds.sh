@@ -39,12 +39,15 @@ confirm "WIPE ${DISK} and create a Ceph OSD on it?" || die "aborted"
 log "Zapping ${DISK}"
 ceph-volume lvm zap "$DISK" --destroy
 
-log "Creating OSD on ${DISK}"
-if [[ -n "$DB_DEV" ]]; then
-    pveceph osd create "$DISK" --db_dev "$DB_DEV"
+OSD_OPTS=()
+if [[ "${OSD_ENCRYPT:-no}" == "yes" ]]; then
+    OSD_OPTS+=(--encrypted 1)
+    log "Creating LUKS-encrypted OSD on ${DISK}"
 else
-    pveceph osd create "$DISK"
+    log "Creating OSD on ${DISK}"
 fi
+[[ -n "$DB_DEV" ]] && OSD_OPTS+=(--db_dev "$DB_DEV")
+pveceph osd create "$DISK" "${OSD_OPTS[@]}"
 
 if [[ -n "${OSD_MEMORY_TARGET}" ]]; then
     log "Setting osd_memory_target=${OSD_MEMORY_TARGET} (cluster-wide)"

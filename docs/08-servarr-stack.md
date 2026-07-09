@@ -9,6 +9,7 @@ HA-protected like anything else.
 | Service | Port | Job |
 |---------|------|-----|
 | Jellyfin | 8096 | media server (the thing you watch) |
+| Audiobookshelf | 13378 | audiobook + podcast server (apps on every platform) |
 | Jellyseerr | 5055 | request portal (the thing family asks for movies with) |
 | Sonarr | 8989 | TV — monitors, grabs, renames, imports |
 | Radarr | 7878 | movies — same |
@@ -36,8 +37,8 @@ continues:
 
 ```
 /mnt/data
-├── torrents/{movies,tv,music}    ← qBittorrent writes here
-└── media/{movies,tv,music}       ← libraries; Sonarr/Radarr hardlink into here
+├── torrents/{movies,tv,music,audiobooks}       ← qBittorrent writes here
+└── media/{movies,tv,music,audiobooks,podcasts} ← libraries live here
 ```
 
 Why an RBD data disk instead of CephFS? The VM sits on the LAN and can't
@@ -111,6 +112,23 @@ Work through `http://10.0.0.20:<port>` for each service:
 8. **Jellyseerr** (5055) — sign in with Jellyfin, connect Sonarr and
    Radarr (URLs + API keys, default profiles/root folders). Family
    requests → auto-download → appears in Jellyfin.
+9. **Audiobookshelf** (13378) — create the admin account; add libraries
+   `/audiobooks` and `/podcasts`. Audiobook acquisition has no
+   Sonarr-equivalent (Readarr is retired): add **AudioBook Bay** as an
+   indexer in Prowlarr (needs FlareSolverr), search from Prowlarr,
+   send grabs to qBittorrent with category `audiobooks` (save path
+   `/data/torrents/audiobooks`), then move/organize into
+   `/data/media/audiobooks` — Audiobookshelf's *Match* tool fixes
+   metadata on import.
+
+## Sharing the library (SMB)
+
+`sudo bash setup-samba.sh` (in this same directory, inside the VM)
+exports `/mnt/data/media` as an authenticated read-write SMB share —
+used by Nextcloud's `Media` folder (docs/10) and mountable from any
+laptop/TV on the LAN (`smb://10.0.0.20/media`, user `media`). The share
+forces ownership to the `media` user so *arr hardlinks keep working no
+matter who edits.
 
 Containers reach each other by service name (`sonarr`, `radarr`,
 `qbittorrent`…) on the compose network — never use `localhost` inside

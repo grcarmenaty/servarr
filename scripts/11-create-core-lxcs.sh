@@ -43,6 +43,7 @@ fi
 render() { # render <src> <dst>
     sed -e "s|@DOMAIN@|${DOMAIN}|g" \
         -e "s|@SERVARR_IP@|${SERVARR_IP}|g" \
+        -e "s|@CLOUD_IP@|${CLOUD_IP}|g" \
         -e "s|@HAOS_IP@|${HAOS_IP}|g" \
         -e "s|@ADGUARD_IP@|${CORE_LXC_IPS[0]}|g" \
         -e "s|@CADDY_IP@|${CORE_LXC_IPS[1]}|g" \

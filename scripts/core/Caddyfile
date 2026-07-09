@@ -58,6 +58,23 @@ http://torrents.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:8080
 }
 
+http://audiobooks.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:13378
+}
+
+# ── cloud stack (cloud VM — Nextcloud + Firefly III) ───────────────────────
+http://cloud.@DOMAIN@ {
+	reverse_proxy @CLOUD_IP@:8080
+}
+
+http://money.@DOMAIN@ {
+	reverse_proxy @CLOUD_IP@:8082
+}
+
+http://money-import.@DOMAIN@ {
+	reverse_proxy @CLOUD_IP@:8081
+}
+
 # ── home automation (optional HAOS VM) ─────────────────────────────────────
 http://hass.@DOMAIN@ {
 	reverse_proxy @HAOS_IP@:8123
