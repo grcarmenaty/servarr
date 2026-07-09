@@ -1,0 +1,111 @@
+# 12 — Software Catalog & Open-Source Audit
+
+Everything this platform runs, with license, source repository, and
+project site. **Audit verdict: the entire stack is free and open-source
+software** — every license below is OSI-approved (GPL/AGPL/LGPL, Apache,
+MIT, BSD, MPL, PostgreSQL). One component was *replaced* to keep that
+true, and a few *optional external services* are flagged at the bottom.
+
+**The one fix the audit forced:** Redis changed to non-open licenses
+(RSALv2/SSPL) from v7.4 in 2024, which made the `redis:7` Docker tag a
+license lottery. This stack uses **Valkey** instead — the Linux
+Foundation's BSD-3 fork, protocol-identical. (Redis 8 later re-added an
+AGPL option, but Valkey is the clean community answer.)
+
+## Platform (runs on the metal)
+
+| Software | Role | License | Source | Site/Docs |
+|----------|------|---------|--------|-----------|
+| Proxmox VE | hypervisor + cluster | AGPL-3.0 | [git.proxmox.com](https://git.proxmox.com) | [proxmox.com](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview) · [wiki](https://pve.proxmox.com/wiki/Main_Page) |
+| Ceph | distributed storage | LGPL-2.1/3.0 | [github.com/ceph/ceph](https://github.com/ceph/ceph) | [ceph.io](https://ceph.io) · [docs](https://docs.ceph.com) |
+| Debian | OS (nodes, VMs, LXCs) | DFSG-free | [salsa.debian.org](https://salsa.debian.org) | [debian.org](https://www.debian.org) |
+| Corosync | cluster membership/quorum | BSD-3 | [github.com/corosync/corosync](https://github.com/corosync/corosync) | [wiki](https://corosync.github.io/corosync/) |
+| cryptsetup/LUKS | OSD encryption at rest | GPL-2.0+ | [gitlab.com/cryptsetup/cryptsetup](https://gitlab.com/cryptsetup/cryptsetup) | [docs](https://gitlab.com/cryptsetup/cryptsetup/-/wikis/home) |
+| chrony | time sync (Ceph needs it) | GPL-2.0 | [gitlab.com/chrony/chrony](https://gitlab.com/chrony/chrony) | [chrony-project.org](https://chrony-project.org) |
+| Docker Engine + Compose | container runtime in VMs | Apache-2.0 | [github.com/moby/moby](https://github.com/moby/moby) · [docker/compose](https://github.com/docker/compose) | [docs.docker.com](https://docs.docker.com) |
+| cloud-init | VM first-boot config | GPL-3.0/Apache-2.0 | [github.com/canonical/cloud-init](https://github.com/canonical/cloud-init) | [docs](https://cloudinit.readthedocs.io) |
+| Proxmox Backup Server *(planned, docs/09)* | dedup backups | AGPL-3.0 | [git.proxmox.com](https://git.proxmox.com/?p=proxmox-backup.git) | [proxmox.com/pbs](https://www.proxmox.com/en/products/proxmox-backup-server/overview) |
+| NUT *(when UPS arrives)* | UPS monitoring/shutdown | GPL-2.0+ | [github.com/networkupstools/nut](https://github.com/networkupstools/nut) | [networkupstools.org](https://networkupstools.org) |
+
+## Core services (LXCs 101–106)
+
+| Software | Role | License | Source | Site/Docs |
+|----------|------|---------|--------|-----------|
+| AdGuard Home (×2) | DNS + ad blocking | GPL-3.0 | [github.com/AdguardTeam/AdGuardHome](https://github.com/AdguardTeam/AdGuardHome) | [adguard.com/adguard-home](https://adguard.com/en/adguard-home/overview.html) · [wiki](https://github.com/AdguardTeam/AdGuardHome/wiki) |
+| Caddy | reverse proxy + portal | Apache-2.0 | [github.com/caddyserver/caddy](https://github.com/caddyserver/caddy) | [caddyserver.com](https://caddyserver.com/docs/) |
+| WireGuard | remote-access VPN | GPL-2.0 (kernel) | [git.zx2c4.com](https://git.zx2c4.com/wireguard-linux/) | [wireguard.com](https://www.wireguard.com) |
+| Uptime Kuma | monitoring + alerting | MIT | [github.com/louislam/uptime-kuma](https://github.com/louislam/uptime-kuma) | [wiki](https://github.com/louislam/uptime-kuma/wiki) |
+| ntfy | self-hosted push notifications | Apache-2.0 / GPL-2.0 | [github.com/binwiederhier/ntfy](https://github.com/binwiederhier/ntfy) | [ntfy.sh](https://ntfy.sh) · [docs](https://docs.ntfy.sh) |
+
+## Media stack (servarr VM, 200)
+
+| Software | Role | License | Source | Site/Docs |
+|----------|------|---------|--------|-----------|
+| Jellyfin | media server | GPL-2.0 | [github.com/jellyfin/jellyfin](https://github.com/jellyfin/jellyfin) | [jellyfin.org](https://jellyfin.org/docs/) |
+| Jellyseerr | request portal | MIT | [github.com/fallenbagel/jellyseerr](https://github.com/fallenbagel/jellyseerr) | [docs.jellyseerr.dev](https://docs.jellyseerr.dev) |
+| Sonarr | TV automation | GPL-3.0 | [github.com/Sonarr/Sonarr](https://github.com/Sonarr/Sonarr) | [sonarr.tv](https://sonarr.tv) · [wiki](https://wiki.servarr.com/sonarr) |
+| Radarr | movie automation | GPL-3.0 | [github.com/Radarr/Radarr](https://github.com/Radarr/Radarr) | [radarr.video](https://radarr.video) · [wiki](https://wiki.servarr.com/radarr) |
+| Prowlarr | indexer manager | GPL-3.0 | [github.com/Prowlarr/Prowlarr](https://github.com/Prowlarr/Prowlarr) | [wiki](https://wiki.servarr.com/prowlarr) |
+| Bazarr | subtitles | GPL-3.0 | [github.com/morpheus65535/bazarr](https://github.com/morpheus65535/bazarr) | [bazarr.media](https://www.bazarr.media) · [wiki](https://wiki.bazarr.media) |
+| qBittorrent | download client | GPL-2.0+ | [github.com/qbittorrent/qBittorrent](https://github.com/qbittorrent/qBittorrent) | [qbittorrent.org](https://www.qbittorrent.org) |
+| Gluetun | VPN container + kill switch | MIT | [github.com/qdm12/gluetun](https://github.com/qdm12/gluetun) | [wiki](https://github.com/qdm12/gluetun-wiki) |
+| FlareSolverr | Cloudflare challenge solver | MIT | [github.com/FlareSolverr/FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) | — |
+| Audiobookshelf | audiobooks + podcasts | GPL-3.0 | [github.com/advplyr/audiobookshelf](https://github.com/advplyr/audiobookshelf) | [audiobookshelf.org](https://www.audiobookshelf.org) |
+| Kavita | ebooks, comics, manga | GPL-3.0 | [github.com/Kareadita/Kavita](https://github.com/Kareadita/Kavita) | [kavitareader.com](https://www.kavitareader.com) · [wiki](https://wiki.kavitareader.com) |
+| Samba | SMB share of the library | GPL-3.0 | [gitlab.com/samba-team](https://gitlab.com/samba-team/samba) | [samba.org](https://www.samba.org) |
+| LinuxServer.io images | container packaging | GPL-3.0 | [github.com/linuxserver](https://github.com/linuxserver) | [linuxserver.io](https://www.linuxserver.io) · [docs](https://docs.linuxserver.io) |
+
+## Cloud tier (VMs 202–204) & photos (205)
+
+| Software | Role | License | Source | Site/Docs |
+|----------|------|---------|--------|-----------|
+| Nextcloud | files/calendar/contacts (×2 app servers) | AGPL-3.0 | [github.com/nextcloud/server](https://github.com/nextcloud/server) | [nextcloud.com](https://nextcloud.com) · [docs](https://docs.nextcloud.com) |
+| PostgreSQL 17 | database | PostgreSQL License | [git.postgresql.org](https://git.postgresql.org/gitweb/?p=postgresql.git) | [postgresql.org](https://www.postgresql.org/docs/) |
+| **Valkey** (not Redis — see audit note) | cache/sessions/locks | BSD-3 | [github.com/valkey-io/valkey](https://github.com/valkey-io/valkey) | [valkey.io](https://valkey.io) |
+| Firefly III | personal finance | AGPL-3.0 | [github.com/firefly-iii/firefly-iii](https://github.com/firefly-iii/firefly-iii) | [firefly-iii.org](https://www.firefly-iii.org) · [docs](https://docs.firefly-iii.org) |
+| Firefly Data Importer | bank/CSV imports | AGPL-3.0 | [github.com/firefly-iii/data-importer](https://github.com/firefly-iii/data-importer) | [docs](https://docs.firefly-iii.org/how-to/data-importer/) |
+| Paperless-ngx | document archive + OCR | GPL-3.0 | [github.com/paperless-ngx/paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) | [docs.paperless-ngx.com](https://docs.paperless-ngx.com) |
+| Immich | photo backup + ML search | AGPL-3.0 | [github.com/immich-app/immich](https://github.com/immich-app/immich) | [immich.app](https://immich.app) · [docs](https://immich.app/docs) |
+| NFS (nfs-kernel-server) | shared Nextcloud state | GPL-2.0 | [git.kernel.org](https://git.kernel.org) | [linux-nfs.org](https://linux-nfs.org) |
+| Vaultwarden *(extra)* | Bitwarden-compatible passwords | AGPL-3.0 | [github.com/dani-garcia/vaultwarden](https://github.com/dani-garcia/vaultwarden) | [wiki](https://github.com/dani-garcia/vaultwarden/wiki) |
+| Syncthing *(extra)* | device file sync | MPL-2.0 | [github.com/syncthing/syncthing](https://github.com/syncthing/syncthing) | [syncthing.net](https://syncthing.net) · [docs](https://docs.syncthing.net) |
+| Home Assistant OS *(optional)* | smart home | Apache-2.0 | [github.com/home-assistant](https://github.com/home-assistant/core) | [home-assistant.io](https://www.home-assistant.io) |
+
+## Guides this build leans on
+
+- [TRaSH Guides](https://trash-guides.info) — the *arr/qBittorrent
+  hardlink layout ([github](https://github.com/TRaSH-Guides/Guides), MIT)
+- [Proxmox wiki: Full Mesh Network for Ceph](https://pve.proxmox.com/wiki/Full_Mesh_Network_for_Ceph_Server)
+  — the switchless 10 GbE triangle
+- [Proxmox wiki: High Availability](https://pve.proxmox.com/wiki/High_Availability)
+
+## External services (optional, NOT self-hosted software — flagged honestly)
+
+| Service | Used for | Nature |
+|---------|----------|--------|
+| [Enable Banking](https://enablebanking.com) | Firefly bank sync (PSD2 aggregator) | commercial SaaS, free restricted tier; **optional** — CSV import is the FOSS-only path |
+| [GoCardless Bank Account Data](https://gocardless.com/bank-account-data/) | legacy bank sync | commercial SaaS, winding down |
+| Your VPN provider (via Gluetun) | torrent privacy | commercial service; Gluetun itself is MIT |
+| DDNS (e.g. [DuckDNS](https://www.duckdns.org)) | WireGuard endpoint | free service; self-host alternative: your own domain + DNS API |
+| [Quad9](https://quad9.net) / upstream DNS | AdGuard upstream | public resolver (Swiss non-profit); swap freely |
+
+Nothing in the platform *requires* any of these — drop them and
+everything still runs, minus that convenience.
+
+## Evaluated for later (all FOSS, deliberately not installed yet)
+
+| Software | What | License | Links | Why not yet |
+|----------|------|---------|-------|-------------|
+| Frigate | NVR / camera AI | MIT | [github](https://github.com/blakeblackshear/frigate) · [frigate.video](https://frigate.video) | needs cameras + ideally a Coral/iGPU |
+| Navidrome | music streaming (Subsonic API) | GPL-3.0 | [github](https://github.com/navidrome/navidrome) · [navidrome.org](https://www.navidrome.org) | Jellyfin already serves music; add if you want Subsonic apps |
+| FreshRSS | RSS reader | AGPL-3.0 | [github](https://github.com/FreshRSS/FreshRSS) · [freshrss.org](https://freshrss.org) | trivial add to cloud-data compose when wanted |
+| Mealie | recipes + meal planning | AGPL-3.0 | [github](https://github.com/mealie-recipes/mealie) · [mealie.io](https://mealie.io) | same |
+| Wallabag | read-it-later | MIT | [github](https://github.com/wallabag/wallabag) · [wallabag.org](https://wallabag.org) | same |
+| Grafana + Prometheus | deep metrics/dashboards | AGPL-3.0 / Apache-2.0 | [grafana](https://github.com/grafana/grafana) · [prometheus](https://github.com/prometheus/prometheus) | Proxmox graphs + Kuma cover the need; add for fun |
+| Headscale | self-hosted Tailscale control plane | BSD-3 | [github](https://github.com/juanfont/headscale) | WireGuard covers remote access; relevant if CGNAT ever forces Tailscale-style NAT traversal |
+| Pi-hole | AdGuard alternative | EUPL-1.2 | [github](https://github.com/pi-hole/pi-hole) · [pi-hole.net](https://pi-hole.net) | AdGuard Home chosen (single binary, DoH out of the box) |
+
+Placement rule of thumb when adding from this list: web app with a
+database → cloud-data compose; heavy/ML → its own VM; single Go/Rust
+binary infra → new LXC (copy any `scripts/core/provision-*.sh` as a
+template).

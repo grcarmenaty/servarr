@@ -10,6 +10,7 @@ HA-protected like anything else.
 |---------|------|-----|
 | Jellyfin | 8096 | media server (the thing you watch) |
 | Audiobookshelf | 13378 | audiobook + podcast server (apps on every platform) |
+| Kavita | 5000 | ebooks, comics & manga reader/server |
 | Jellyseerr | 5055 | request portal (the thing family asks for movies with) |
 | Sonarr | 8989 | TV — monitors, grabs, renames, imports |
 | Radarr | 7878 | movies — same |
@@ -120,6 +121,10 @@ Work through `http://10.0.0.20:<port>` for each service:
    `/data/torrents/audiobooks`), then move/organize into
    `/data/media/audiobooks` — Audiobookshelf's *Match* tool fixes
    metadata on import.
+10. **Kavita** (5000) — create the admin account; add a library pointing
+    at `/books`. Ebooks/comics follow the same acquisition flow as
+    audiobooks (Prowlarr search → qBittorrent category `books` →
+    organize into `/data/media/books`).
 
 ## Sharing the library (SMB)
 

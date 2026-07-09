@@ -62,6 +62,10 @@ http://audiobooks.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:13378
 }
 
+http://books.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:5000
+}
+
 # ── cloud tier — Nextcloud load-balanced across two app VMs ────────────────
 # Sessions live in Redis, so no sticky sessions needed; health checks drop a
 # dead backend within seconds and all traffic flows to the survivor.
@@ -81,6 +85,18 @@ http://money.@DOMAIN@ {
 
 http://money-import.@DOMAIN@ {
 	reverse_proxy @CLOUDDATA_IP@:8081
+}
+
+http://paperless.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8000
+}
+
+http://photos.@DOMAIN@ {
+	reverse_proxy @PHOTOS_IP@:2283
+}
+
+http://ntfy.@DOMAIN@ {
+	reverse_proxy @NTFY_IP@:80
 }
 
 # ── home automation (optional HAOS VM) ─────────────────────────────────────

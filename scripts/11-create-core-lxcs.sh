@@ -5,6 +5,7 @@
 #   wireguard  remote-access VPN            10.0.0.7
 #   kuma       Uptime Kuma monitoring       10.0.0.8
 #   adguard2   second DNS (HA pair)         10.0.0.9
+#   ntfy       self-hosted push alerts      10.0.0.10
 #
 # Run ONCE, on any cluster node, after Ceph storage exists:
 #   bash 11-create-core-lxcs.sh all           # everything
@@ -20,7 +21,7 @@ require_pve
 
 TARGET="${1:-}"
 HA_FLAG="${2:-}"
-[[ -n "$TARGET" ]] || die "usage: $0 all|adguard|caddy|wireguard|kuma|adguard2 [--ha]"
+[[ -n "$TARGET" ]] || die "usage: $0 all|adguard|caddy|wireguard|kuma|adguard2|ntfy [--ha]"
 [[ -f /etc/pve/ceph.conf ]] || die "Ceph not set up yet — LXC rootfs lives on ${VM_POOL}"
 
 # ── Debian 13 container template ──────────────────────────────────────────
@@ -53,6 +54,8 @@ render() { # render <src> <dst>
         -e "s|@CADDY_IP@|${CORE_LXC_IPS[1]}|g" \
         -e "s|@WIREGUARD_IP@|${CORE_LXC_IPS[2]}|g" \
         -e "s|@KUMA_IP@|${CORE_LXC_IPS[3]}|g" \
+        -e "s|@NTFY_IP@|${CORE_LXC_IPS[5]}|g" \
+        -e "s|@PHOTOS_IP@|${PHOTOS_IP}|g" \
         -e "s|@NODE1_IP@|${NODE_IPS[0]}|g" \
         -e "s|@WG_ENDPOINT@|${WG_ENDPOINT}|g" \
         -e "s|@WG_SUBNET@|${WG_SUBNET}|g" \

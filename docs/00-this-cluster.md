@@ -112,7 +112,8 @@ and the exact cabling table: `docs/02-network.md`.
     Assistant. Finish the checklists in `docs/09-core-services.md`
     (router DHCP → AdGuard, WireGuard port forward, backup job, UPS).
 12. `scripts/13-create-cloud-vms.sh --ha` → cloud tier: two
-    load-balanced Nextcloud instances + Firefly III, shared media
-    folder (`docs/10`).
-13. `scripts/20-enable-ha.sh` → everything HA + anti-affinity rules
+    load-balanced Nextcloud instances, Firefly III, Paperless-ngx,
+    shared media folder (`docs/10`).
+13. `scripts/14-create-photos-vm.sh --ha` → Immich photos (`docs/11`).
+14. `scripts/20-enable-ha.sh` → everything HA + anti-affinity rules
     (`docs/06`).

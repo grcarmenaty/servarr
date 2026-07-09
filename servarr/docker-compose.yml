@@ -46,6 +46,17 @@ services:
       - ${DATA_ROOT}/media/audiobooks:/audiobooks
       - ${DATA_ROOT}/media/podcasts:/podcasts
 
+  # ── ebooks, comics & manga ────────────────────────────────────────────
+  kavita:
+    <<: *common
+    image: jvmilazz0/kavita:latest
+    container_name: kavita
+    ports:
+      - "5000:5000"
+    volumes:
+      - ${CONFIG_ROOT}/kavita:/kavita/config
+      - ${DATA_ROOT}/media/books:/books
+
   # ── request management (users ask for movies/shows here) ─────────────
   jellyseerr:
     <<: *common

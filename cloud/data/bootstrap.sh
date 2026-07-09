@@ -80,6 +80,9 @@ if [[ ! -f .env ]]; then
         -e "s|^FIREFLY_DB_PASSWORD=.*|FIREFLY_DB_PASSWORD=$(rand 32)|" \
         -e "s|^FIREFLY_APP_KEY=.*|FIREFLY_APP_KEY=$(rand 32)|" \
         -e "s|^AUTO_IMPORT_SECRET=.*|AUTO_IMPORT_SECRET=$(rand 32)|" \
+        -e "s|^PAPERLESS_DB_PASSWORD=.*|PAPERLESS_DB_PASSWORD=$(rand 32)|" \
+        -e "s|^PAPERLESS_SECRET_KEY=.*|PAPERLESS_SECRET_KEY=$(rand 48)|" \
+        -e "s|^PAPERLESS_ADMIN_PASSWORD=.*|PAPERLESS_ADMIN_PASSWORD=$(rand 20)|" \
         .env
     chown "$LOGIN_USER:$LOGIN_USER" .env
     chmod 600 .env
@@ -88,6 +91,10 @@ fi
 # ── 5. Bank auto-import: dirs + daily cron ───────────────────────────────
 log "Preparing importer dirs + daily bank auto-import (06:30)"
 mkdir -p "${CONFIG_ROOT}/firefly-importer/keys" "${CONFIG_ROOT}/firefly-importer/import"
+
+# Paperless-ngx storage (runs as uid 1000 inside its container)
+mkdir -p "$DATA_MOUNT"/paperless/{media,export,consume}
+chown -R 1000:1000 "$DATA_MOUNT/paperless"
 cat > /etc/cron.d/firefly-autoimport <<EOF
 # Daily bank sync: runs every saved import config in the importer's /import
 # dir (no-op until you save some — docs/10 "Connecting your banks")

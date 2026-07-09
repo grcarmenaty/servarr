@@ -117,5 +117,6 @@ it (hard-reset a node, watch it recover) is what turns "should work"
 into "guaranteed".
 
 Capacity check for full-node absorption: HA-protected RAM is
-servarr 16 + cloud tier 12 + HAOS 4 + LXCs ~4 ≈ **36 GB**, against
-~80 GB of headroom on two surviving nodes. Comfortable.
+servarr 16 + cloud tier 14 + photos 8 + HAOS 4 + LXCs ~5 ≈ **47 GB**,
+against ~80 GB of headroom on two surviving nodes. Still comfortable —
+recheck this arithmetic before HA-protecting anything new.

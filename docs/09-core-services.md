@@ -14,10 +14,12 @@ rationale in docs/08), one optional VM, and some policy.
 | Caddy — reverse proxy + portal | LXC | 102 | 10.0.0.6 | `http://home.lan` |
 | WireGuard — remote access VPN | LXC | 103 | 10.0.0.7 | (UDP 51820) |
 | Uptime Kuma — monitoring/alerts | LXC | 104 | 10.0.0.8 | `http://status.home.lan` |
+| ntfy — self-hosted push notifications | LXC | 106 | 10.0.0.10 | `http://ntfy.home.lan` |
 | Servarr — media stack (docs/08) | VM | 200 | 10.0.0.20 | `http://jellyfin.home.lan` |
 | Home Assistant OS — smart home | VM | 201 | 10.0.0.21 | `http://hass.home.lan` |
 | cloud-data — Postgres/Redis/NFS + Firefly (docs/10) | VM | 202 | 10.0.0.22 | `http://money.home.lan` |
 | cloud1 + cloud2 — Nextcloud app pair (docs/10) | VM ×2 | 203/204 | 10.0.0.23/.24 | `http://cloud.home.lan` |
+| photos — Immich (docs/11) | VM | 205 | 10.0.0.25 | `http://photos.home.lan` |
 
 After everything exists, `bash scripts/20-enable-ha.sh` enrolls it all
 in HA and adds the anti-affinity rules (Nextcloud pair, DNS pair) — the
@@ -111,10 +113,14 @@ monitors — suggested set:
   enable "ignore TLS error").
 - **DNS**: query type A for `google.com` against server 10.0.0.5.
 
-Then *Settings → Notifications*: hook up Telegram, ntfy, email, or
-Discord — this is the thing that texts you when Jellyfin dies while
-you're on the sofa. Monitor from the outside too if you want rigor:
-Kuma can't tell you the whole cluster lost power (see UPS below).
+Then *Settings → Notifications* → **ntfy**: server
+`http://10.0.0.10`, pick a topic (e.g. `alerts`), and subscribe to that
+topic in the [ntfy mobile app](https://ntfy.sh) pointed at
+`http://ntfy.home.lan` — fully self-hosted push to your phone, no
+Google/Telegram middleman (works remotely over WireGuard). Telegram/
+email/Discord remain options if you prefer. Monitor from the outside
+too if you want rigor: Kuma can't tell you the whole cluster lost
+power (see UPS below).
 
 ## Home Assistant (optional)
 
@@ -201,15 +207,13 @@ the Caddyfile.
 
 The menu people usually add next — placement guidance:
 
-| Service | What | Where |
-|---------|------|-------|
-| Immich | Google-Photos replacement | Its own compose in the cloud VM (bump its RAM for ML); photos under `/mnt/clouddata/photos` |
-| Paperless-ngx | document archive | Cloud VM compose; docs under `/mnt/clouddata/documents` |
-| Frigate | NVR / cameras | Own VM; wants a Coral TPU or iGPU, storage appetite is big |
-| Pi-hole alternative dashboards, Grafana, etc. | | Only if you enjoy them — Kuma + Proxmox graphs cover the basics |
-
-(Nextcloud and Firefly III graduated from this menu into their own VM —
-`docs/10-cloud-stack.md`.)
+Most of the old "menu" has graduated into the platform proper: Nextcloud
+and Firefly (docs/10), Paperless-ngx (docs/10), Immich (docs/11),
+Audiobookshelf and Kavita (docs/08), ntfy (above). What remains
+deliberately uninstalled — Frigate, Navidrome, FreshRSS, Grafana, and
+friends — is cataloged with licenses and links in
+**`docs/12-software-catalog.md`**, together with the placement rule of
+thumb for adding anything new.
 
 Rule of thumb: Docker things go in VMs (one "apps" VM is fine until it
 isn't), single-binary infra goes in LXCs, and anything with a USB

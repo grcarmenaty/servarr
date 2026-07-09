@@ -31,6 +31,10 @@ blip. All state lives one layer down, on a shared-services VM.
 | Nextcloud (×2) | cloud1/cloud2 :8080 | `http://cloud.home.lan` |
 | Firefly III | cloud-data :8082 | `http://money.home.lan` |
 | Firefly Importer | cloud-data :8081 | `http://money-import.home.lan` |
+| Paperless-ngx | cloud-data :8000 | `http://paperless.home.lan` |
+
+(The "Redis" service is actually **Valkey** — BSD-licensed, protocol
+identical; Redis itself stopped being open source at 7.4. See docs/12.)
 
 ## Why this works with two instances
 
@@ -188,6 +192,24 @@ run you map columns by hand; save the config and subsequent statements
 are two clicks (or drop the CSV next to its config in `import/` and let
 the nightly run eat it). Works for literally any bank, brokerage, or
 crypto exchange that can produce a CSV.
+
+## Paperless-ngx (documents)
+
+Lives on cloud-data (`http://paperless.home.lan`, login `admin` + the
+password bootstrap generated into `.env`). Scan/photograph any
+document → drop it in — Paperless OCRs it (language via
+`PAPERLESS_OCR_LANGUAGE` in `.env`), tags it, and makes it full-text
+searchable. Three ways in:
+
+- web UI upload, or the mobile app
+  ([paperless-mobile](https://github.com/paperless-ngx/paperless-mobile))
+- the **consume folder**: anything written to
+  `/mnt/clouddata/paperless/consume` is ingested automatically — point
+  a network scanner at it, or expose it through Nextcloud
+- email ingestion (*Settings → Mail*) if you give it a mailbox
+
+Storage is on the backed-up cloud-data disk; the `export/` dir +
+`document_exporter` gives a portable dump for extra safety.
 
 ## Upgrades — the one multi-instance gotcha
 

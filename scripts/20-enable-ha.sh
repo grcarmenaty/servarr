@@ -35,6 +35,7 @@ enroll "vm:${CLOUDDATA_VMID}" "${CLOUDDATA_NAME}"
 for i in "${!CLOUD_APP_VMIDS[@]}"; do
     enroll "vm:${CLOUD_APP_VMIDS[$i]}" "${CLOUD_APP_NAMES[$i]}"
 done
+enroll "vm:${PHOTOS_VMID}" "${PHOTOS_NAME}"
 
 # ── anti-affinity: redundant pairs must not share a node ──────────────────
 # PVE 9 HA resource-affinity rules; falls back to a GUI hint on older CLIs.
