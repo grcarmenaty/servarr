@@ -37,6 +37,8 @@ for i in "${!CLOUD_APP_VMIDS[@]}"; do
 done
 enroll "vm:${PHOTOS_VMID}" "${PHOTOS_NAME}"
 enroll "vm:${WAZUH_VMID}" "${WAZUH_NAME}"
+# NOT enrolled on purpose: the AI VM (${AI_VMID}) and any GPU/desktop VMs —
+# PCI passthrough pins them to one node; HA can't move them (docs/16).
 
 # ── anti-affinity: redundant pairs must not share a node ──────────────────
 # PVE 9 HA resource-affinity rules; falls back to a GUI hint on older CLIs.

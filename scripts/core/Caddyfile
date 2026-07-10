@@ -48,6 +48,11 @@ http://desktop.@DOMAIN@ {
 	reverse_proxy @CLOUDDATA_IP@:8085
 }
 
+# AI assistant — Open WebUI, authenticated (docs/16)
+http://chat.@DOMAIN@ {
+	reverse_proxy @AI_IP@:3000
+}
+
 # ── media stack (servarr VM) ───────────────────────────────────────────────
 http://jellyfin.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:8096

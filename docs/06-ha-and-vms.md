@@ -108,6 +108,7 @@ anti-affinity rules so the redundant pairs never share a node. What
 | cloud-data (DB/NFS) | HA restart | ~2–3 min (Nextcloud stalls, resumes) |
 | Jellyfin / *arrs / HAOS | HA restart | ~2–3 min |
 | Caddy, WireGuard, Kuma | HA restart | ~1–2 min (LXCs restart fast) |
+| AI VM / GPU or desktop VMs | none — pinned by PCI passthrough | down until their node returns (docs/16) |
 
 The restart tier is a genuine limit of single-instance software, not of
 the cluster: Jellyfin, Home Assistant, and Postgres can't run

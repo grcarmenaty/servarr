@@ -315,6 +315,20 @@ cd wazuh && sudo WAZUH_VERSION=4.14.6 bash bootstrap.sh
 `bash 25-install-wazuh-agent.sh` on each node, `scp`+run in each VM,
 `pct push`+exec in each LXC.
 
+**9g. AI assistant** (when the GPU node has its Tesla P40) — `docs/16`:
+```bash
+# on the P40 node — BIOS: Above 4G Decoding ON first:
+lspci -nn | grep -i nvidia                      # e.g. 01:00.0
+bash /root/scripts/26-prepare-gpu-passthrough.sh 01:00
+# migrate guests off, reboot the node, verify vfio-pci, then:
+bash /root/scripts/16-create-ai-vm.sh 01:00
+scp -r ai cloud@10.0.0.27:~ && ssh cloud@10.0.0.27
+cd ai && sudo bash bootstrap.sh     # pass 1 → sudo reboot
+# after VM reboot: pass 2, then docker compose up -d, pull a model
+```
+→ **first signup = admin** at `http://chat.home.lan`, then
+`ENABLE_SIGNUP=false` in `.env` + `docker compose up -d`.
+
 **Checkpoint 9**: `http://home.lan` portal loads from a LAN device and
 **every tile works**; phone on mobile data connects via WireGuard and
 reaches the portal too.

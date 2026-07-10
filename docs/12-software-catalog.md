@@ -35,6 +35,16 @@ AGPL option, but Valkey is the clean community answer.)
 | Xfce | desktop environment in desktop VMs | GPL/LGPL | [gitlab.xfce.org](https://gitlab.xfce.org) | [xfce.org](https://xfce.org) |
 | noVNC / SPICE | in-browser + rich VM consoles (part of PVE) | MPL-2.0 / LGPL | [github.com/novnc/noVNC](https://github.com/novnc/noVNC) · [spice-space.org](https://www.spice-space.org) | [virt-viewer](https://virt-manager.org) |
 
+## AI tier (VM 207, GPU passthrough)
+
+| Software | Role | License | Source | Site/Docs |
+|----------|------|---------|--------|-----------|
+| Ollama | LLM inference server | MIT | [github.com/ollama/ollama](https://github.com/ollama/ollama) | [ollama.com](https://ollama.com) |
+| llama.cpp | inference engine under Ollama | MIT | [github.com/ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) | — |
+| Open WebUI | authenticated chat UI + OpenAI-compatible API | ⚠ "Open WebUI License" — BSD-3 **plus a branding-protection clause** (≥ v0.6); not OSI-listed. Functionally open; the one licensing asterisk in the stack. Pure-MIT alternative: [LibreChat](https://github.com/danny-avila/LibreChat) | [github.com/open-webui/open-webui](https://github.com/open-webui/open-webui) | [docs.openwebui.com](https://docs.openwebui.com) |
+| nvidia-container-toolkit | GPU access for containers | Apache-2.0 | [github.com/NVIDIA/nvidia-container-toolkit](https://github.com/NVIDIA/nvidia-container-toolkit) | [docs](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/) |
+| NVIDIA driver + CUDA | GPU driver/runtime | **proprietary** — the single non-FOSS software component in the platform; unavoidable for CUDA inference on NVIDIA cards (Nouveau has no CUDA) | [nvidia.com/drivers](https://www.nvidia.com/en-us/drivers/) | flagged deliberately |
+
 ## Core services (LXCs 101–106)
 
 | Software | Role | License | Source | Site/Docs |
