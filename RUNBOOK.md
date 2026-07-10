@@ -305,6 +305,8 @@ docker compose up -d --build     # wait for http://10.0.0.23:8080 login page
 ```
 → Nextcloud: External storage → SMB `Media` (docs/10) → Firefly owner
 account → bank connections (docs/10 §banks) → Paperless admin login.
+Optional, same VM: `sudo bash setup-taiga.sh` + `taiga-manage.sh
+createsuperuser` → project boards at `http://taiga.home.lan`.
 
 **9e. Photos** — `docs/11`:
 ```bash

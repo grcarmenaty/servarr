@@ -131,6 +131,10 @@ http://search.@DOMAIN@ {
 	reverse_proxy @CLOUDDATA_IP@:8083
 }
 
+http://taiga.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:9000
+}
+
 http://photos.@DOMAIN@ {
 	reverse_proxy @PHOTOS_IP@:2283
 }

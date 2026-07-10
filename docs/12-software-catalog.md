@@ -91,6 +91,7 @@ AGPL option, but Valkey is the clean community answer.)
 | Paperless-ngx | document archive + OCR | GPL-3.0 | [github.com/paperless-ngx/paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) | [docs.paperless-ngx.com](https://docs.paperless-ngx.com) |
 | Immich | photo backup + ML search | AGPL-3.0 | [github.com/immich-app/immich](https://github.com/immich-app/immich) | [immich.app](https://immich.app) · [docs](https://immich.app/docs) |
 | SearXNG | private metasearch engine | AGPL-3.0 | [github.com/searxng/searxng](https://github.com/searxng/searxng) | [docs.searxng.org](https://docs.searxng.org) |
+| Taiga | agile project management (kanban/scrum) | AGPL-3.0 (back) / MPL-2.0 (front) | [github.com/taigaio](https://github.com/taigaio) · [taiga-docker](https://github.com/taigaio/taiga-docker) | [taiga.io](https://taiga.io) · [docs](https://docs.taiga.io) |
 | NFS (nfs-kernel-server) | shared Nextcloud state | GPL-2.0 | [git.kernel.org](https://git.kernel.org) | [linux-nfs.org](https://linux-nfs.org) |
 | Vaultwarden *(extra)* | Bitwarden-compatible passwords | AGPL-3.0 | [github.com/dani-garcia/vaultwarden](https://github.com/dani-garcia/vaultwarden) | [wiki](https://github.com/dani-garcia/vaultwarden/wiki) |
 | Syncthing *(extra)* | device file sync | MPL-2.0 | [github.com/syncthing/syncthing](https://github.com/syncthing/syncthing) | [syncthing.net](https://syncthing.net) · [docs](https://docs.syncthing.net) |
@@ -132,7 +133,6 @@ everything still runs, minus that convenience.
 | OPNsense | firewall/router OS (VLANs, Suricata IDS, whole-LAN visibility) | BSD-2 | [github](https://github.com/opnsense/core) · [opnsense.org](https://opnsense.org) | replaces the ISP router — a project of its own (docs/13) |
 | LibreNMS | SNMP network monitoring | GPL-3.0 | [github](https://github.com/librenms/librenms) · [librenms.org](https://www.librenms.org) | valuable once a managed switch exists |
 | Pi-hole | AdGuard alternative | EUPL-1.2 | [github](https://github.com/pi-hole/pi-hole) · [pi-hole.net](https://pi-hole.net) | AdGuard Home chosen (single binary, DoH out of the box) |
-| Taiga.io | agile project management (kanban/scrum) | AGPL-3.0 | [github](https://github.com/taigaio) · [taiga.io](https://taiga.io) | multi-container official [taiga-docker](https://github.com/taigaio/taiga-docker); fits on cloud-data if project tracking is ever wanted |
 | Suwayomi | manga downloader/server (pairs with Kavita) | MPL-2.0 | [github](https://github.com/Suwayomi/Suwayomi-Server) | add to the servarr compose if manga sources beyond Kapowarr are wanted |
 
 Placement rule of thumb when adding from this list: web app with a

@@ -118,8 +118,8 @@ it (hard-reset a node, watch it recover) is what turns "should work"
 into "guaranteed".
 
 Capacity check for full-node absorption: HA-protected RAM is
-servarr 16 + cloud tier 14 + photos 8 + wazuh 8 + HAOS 4 + LXCs ~5 ≈
-**55 GB**, against ~80 GB of headroom on two surviving nodes. Getting
+servarr 16 + cloud tier 16 + photos 8 + wazuh 8 + HAOS 4 + LXCs ~5 ≈
+**57 GB**, against ~80 GB of headroom on two surviving nodes. Getting
 chunky but fine — recheck this arithmetic before HA-protecting anything
 new (throwaway desktop VMs from `scripts/30` are deliberately NOT
-HA-enrolled and don't count).
+HA-enrolled and don't count, nor does the node-pinned AI VM).

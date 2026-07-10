@@ -33,6 +33,7 @@ blip. All state lives one layer down, on a shared-services VM.
 | Firefly Importer | cloud-data :8081 | `http://money-import.home.lan` |
 | Paperless-ngx | cloud-data :8000 | `http://paperless.home.lan` |
 | SearXNG | cloud-data :8083 | `http://search.home.lan` |
+| Taiga | cloud-data :9000 | `http://taiga.home.lan` |
 
 (The "Redis" service is actually **Valkey** — BSD-licensed, protocol
 identical; Redis itself stopped being open source at 7.4. See docs/12.)
@@ -228,6 +229,29 @@ design (your searches stay anonymous even at home).
 - **Enable the JSON API** (needed for the AI assistant's web search,
   docs/16): in `settings.yml` add `json` under `search: formats:`,
   restart.
+
+## Taiga (project management)
+
+Kanban/scrum boards, epics, sprints, wiki — for the household projects
+that outgrow a notes app (this build itself would fit). Deployed from
+Taiga's **official `taiga-docker`** stack (it brings its own Postgres +
+RabbitMQ; upstream stays authoritative):
+
+```bash
+# on cloud-data, after the main stack is up:
+sudo bash setup-taiga.sh
+# then, once taiga-back is healthy (~1 min):
+cd /opt/taiga-docker && ./taiga-manage.sh createsuperuser
+```
+
+Log in at `http://taiga.home.lan`. Notes:
+
+- Public registration is off; add users via `/admin/` (Django admin).
+- No SMTP at home → invite/notification emails print to
+  `docker logs taiga-back` instead of sending. Wire real SMTP later in
+  `/opt/taiga-docker/.env` if you ever want email.
+- Upgrades: `cd /opt/taiga-docker && git pull && docker compose pull &&
+  docker compose up -d`.
 
 ## Upgrades — the one multi-instance gotcha
 
