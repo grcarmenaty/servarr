@@ -74,6 +74,8 @@ AGPL option, but Valkey is the clean community answer.)
 | FlareSolverr | Cloudflare challenge solver | MIT | [github.com/FlareSolverr/FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) | — |
 | Audiobookshelf | audiobooks + podcasts | GPL-3.0 | [github.com/advplyr/audiobookshelf](https://github.com/advplyr/audiobookshelf) | [audiobookshelf.org](https://www.audiobookshelf.org) |
 | Kavita | ebooks, comics, manga | GPL-3.0 | [github.com/Kareadita/Kavita](https://github.com/Kareadita/Kavita) | [kavitareader.com](https://www.kavitareader.com) · [wiki](https://wiki.kavitareader.com) |
+| LazyLibrarian | books/audiobooks automation (Readarr substitute) | GPL-3.0 | [gitlab.com/LazyLibrarian/LazyLibrarian](https://gitlab.com/LazyLibrarian/LazyLibrarian) | [docs](https://lazylibrarian.gitlab.io) |
+| Kapowarr | comics automation | GPL-3.0 | [github.com/Casvt/Kapowarr](https://github.com/Casvt/Kapowarr) | [docs](https://casvt.github.io/Kapowarr/) |
 | Samba | SMB share of the library | GPL-3.0 | [gitlab.com/samba-team](https://gitlab.com/samba-team/samba) | [samba.org](https://www.samba.org) |
 | LinuxServer.io images | container packaging | GPL-3.0 | [github.com/linuxserver](https://github.com/linuxserver) | [linuxserver.io](https://www.linuxserver.io) · [docs](https://docs.linuxserver.io) |
 
@@ -130,6 +132,8 @@ everything still runs, minus that convenience.
 | OPNsense | firewall/router OS (VLANs, Suricata IDS, whole-LAN visibility) | BSD-2 | [github](https://github.com/opnsense/core) · [opnsense.org](https://opnsense.org) | replaces the ISP router — a project of its own (docs/13) |
 | LibreNMS | SNMP network monitoring | GPL-3.0 | [github](https://github.com/librenms/librenms) · [librenms.org](https://www.librenms.org) | valuable once a managed switch exists |
 | Pi-hole | AdGuard alternative | EUPL-1.2 | [github](https://github.com/pi-hole/pi-hole) · [pi-hole.net](https://pi-hole.net) | AdGuard Home chosen (single binary, DoH out of the box) |
+| Taiga.io | agile project management (kanban/scrum) | AGPL-3.0 | [github](https://github.com/taigaio) · [taiga.io](https://taiga.io) | multi-container official [taiga-docker](https://github.com/taigaio/taiga-docker); fits on cloud-data if project tracking is ever wanted |
+| Suwayomi | manga downloader/server (pairs with Kavita) | MPL-2.0 | [github](https://github.com/Suwayomi/Suwayomi-Server) | add to the servarr compose if manga sources beyond Kapowarr are wanted |
 
 Placement rule of thumb when adding from this list: web app with a
 database → cloud-data compose; heavy/ML → its own VM; single Go/Rust

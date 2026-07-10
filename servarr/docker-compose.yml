@@ -56,6 +56,7 @@ services:
     volumes:
       - ${CONFIG_ROOT}/kavita:/kavita/config
       - ${DATA_ROOT}/media/books:/books
+      - ${DATA_ROOT}/media/comics:/comics
 
   # ── request management (users ask for movies/shows here) ─────────────
   jellyseerr:
@@ -108,6 +109,30 @@ services:
       - "9696:9696"
     volumes:
       - ${CONFIG_ROOT}/prowlarr:/config
+
+  # ── books & comics automation ─────────────────────────────────────────
+  lazylibrarian: # books + audiobooks + magazines (the Readarr substitute)
+    <<: *common
+    image: lscr.io/linuxserver/lazylibrarian:latest
+    container_name: lazylibrarian
+    ports:
+      - "5299:5299"
+    volumes:
+      - ${CONFIG_ROOT}/lazylibrarian:/config
+      - ${DATA_ROOT}:/data
+
+  kapowarr: # comics — monitors volumes, fetches issues into the Kavita library
+    restart: unless-stopped
+    image: mrcas/kapowarr:latest
+    container_name: kapowarr
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+      - "5656:5656"
+    volumes:
+      - ${CONFIG_ROOT}/kapowarr:/app/db
+      - ${DATA_ROOT}/torrents/comics:/app/temp_downloads
+      - ${DATA_ROOT}/media/comics:/comics-1
 
   # whisparr: # the adult-content *arr — uncomment if that's your thing
   #   <<: *common

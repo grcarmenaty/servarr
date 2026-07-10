@@ -17,6 +17,8 @@ HA-protected like anything else.
 | Lidarr | 8686 | music — same |
 | Prowlarr | 9696 | indexer manager, syncs indexers into the other *arrs |
 | Bazarr | 6767 | subtitles for what Sonarr/Radarr import |
+| LazyLibrarian | 5299 | books/audiobooks/magazines automation — the Readarr substitute |
+| Kapowarr | 5656 | comics automation — monitors series, fetches issues for Kavita |
 | qBittorrent | 8080 | download client — the image runs **qbittorrent-nox** (headless daemon; the web UI is its only interface) |
 | FlareSolverr | 8191 | solves Cloudflare challenges for Prowlarr |
 | Gluetun (optional) | — | VPN tunnel + kill switch in front of qBittorrent |
@@ -126,10 +128,23 @@ Work through `http://10.0.0.20:<port>` for each service:
    `/data/torrents/audiobooks`), then move/organize into
    `/data/media/audiobooks` — Audiobookshelf's *Match* tool fixes
    metadata on import.
-11. **Kavita** (5000) — create the admin account; add a library pointing
-    at `/books`. Ebooks/comics follow the same acquisition flow as
-    audiobooks (Prowlarr search → qBittorrent category `books` →
-    organize into `/data/media/books`).
+11. **Kavita** (5000) — create the admin account; add libraries
+    `/books` (type *Book*) and `/comics` (type *Comic* — Kapowarr fills
+    this one automatically).
+12. **LazyLibrarian** (5299) — the Readarr substitute: *Config →
+    Downloaders* → qBittorrent (host `qbittorrent`/`gluetun`, category
+    `books`); *Providers* → add your torznab indexers straight from
+    Prowlarr (each Prowlarr indexer exposes a torznab URL + API key);
+    *Processing* → destination `/data/media/books` for ebooks and
+    `/data/media/audiobooks` for audio. Then add authors/books to
+    monitor — grabs, imports, renames like the *arrs do.
+13. **Kapowarr** (5656) — comics automation: needs a free
+    [ComicVine API key](https://comicvine.gamespot.com/api/) (*Settings
+    → General*); root folder is `/comics-1`, downloads land in
+    `/app/temp_downloads` and import automatically. Add volumes
+    (series) to monitor; Kavita's `/comics` library picks up everything
+    it fetches. Note: Kapowarr sources mainly from direct-download
+    services, so it works without touching the torrent stack.
 
 ## The *arr family — complete inventory
 
@@ -143,7 +158,8 @@ What's running, what's deliberately not, and why:
 | Prowlarr (indexers) | ✅ running | feeds all of the above |
 | Bazarr (subtitles) | ✅ running | companion, not technically an *arr fork |
 | **Overseerr** | ❌ — **Jellyseerr instead** | Overseerr only authenticates against Plex; Jellyseerr is its fork with Jellyfin support — same UI, same features |
-| **Readarr** (books/audiobooks) | ❌ retired upstream (2025) | project officially ended, repos archived. Books/audiobooks flow via Prowlarr manual search → qBittorrent → Audiobookshelf/Kavita (steps 10–11). [LazyLibrarian](https://gitlab.com/LazyLibrarian/LazyLibrarian) exists if you want automation back |
+| **Readarr** (books/audiobooks) | ❌ retired upstream (2025) → **LazyLibrarian runs as its substitute** (step 12) | Readarr's repos are archived; LazyLibrarian is the maintained equivalent and covers magazines too. Manual fallback: Prowlarr search → qBittorrent → Audiobookshelf/Kavita |
+| Kapowarr (comics) | ✅ running | the "Radarr for comics" — not an official *arr but fills that slot (step 13) |
 | **Whisparr** (adult) | ⬜ present but commented | uncomment in the compose if wanted (port 6969) |
 
 Optional companions, also commented in the compose, worth enabling

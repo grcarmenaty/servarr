@@ -94,6 +94,14 @@ http://books.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:5000
 }
 
+http://lazylibrarian.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:5299
+}
+
+http://kapowarr.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:5656
+}
+
 # ── cloud tier — Nextcloud load-balanced across two app VMs ────────────────
 # Sessions live in Redis, so no sticky sessions needed; health checks drop a
 # dead backend within seconds and all traffic flows to the survivor.

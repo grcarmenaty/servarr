@@ -59,8 +59,8 @@ log "data disk mounted at ${DATA_MOUNT} ($(df -h --output=size "$DATA_MOUNT" | t
 
 # ── 3. Directory tree (TRaSH-guides layout) ──────────────────────────────
 log "Creating directory tree"
-mkdir -p "$DATA_MOUNT"/media/{movies,tv,music,audiobooks,podcasts,books} \
-         "$DATA_MOUNT"/torrents/{movies,tv,music,audiobooks,books} \
+mkdir -p "$DATA_MOUNT"/media/{movies,tv,music,audiobooks,podcasts,books,comics} \
+         "$DATA_MOUNT"/torrents/{movies,tv,music,audiobooks,books,comics} \
          "$CONFIG_ROOT"
 chown -R "$MEDIA_USER:$MEDIA_USER" "$DATA_MOUNT" "$CONFIG_ROOT"
 
