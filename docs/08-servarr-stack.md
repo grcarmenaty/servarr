@@ -14,7 +14,8 @@ HA-protected like anything else.
 | Jellyseerr | 5055 | request portal (the thing family asks for movies with) |
 | Sonarr | 8989 | TV — monitors, grabs, renames, imports |
 | Radarr | 7878 | movies — same |
-| Prowlarr | 9696 | indexer manager, syncs indexers into Sonarr/Radarr |
+| Lidarr | 8686 | music — same |
+| Prowlarr | 9696 | indexer manager, syncs indexers into the other *arrs |
 | Bazarr | 6767 | subtitles for what Sonarr/Radarr import |
 | qBittorrent | 8080 | download client — the image runs **qbittorrent-nox** (headless daemon; the web UI is its only interface) |
 | FlareSolverr | 8191 | solves Cloudflare challenges for Prowlarr |
@@ -90,9 +91,9 @@ Work through `http://10.0.0.20:<port>` for each service:
 
 1. **qBittorrent** (8080) — temporary admin password is in
    `docker logs qbittorrent`; set a real one (*Tools → Options →
-   Web UI*). Set *Default Save Path* to `/data/torrents`, and per-category
-   paths: create categories `movies` → `/data/torrents/movies`, `tv` →
-   `/data/torrents/tv`.
+   Web UI*). Set *Default Save Path* to `/data/torrents`, and
+   per-category paths: `movies` → `/data/torrents/movies`, `tv` →
+   `/data/torrents/tv`, `music` → `/data/torrents/music`.
 2. **Prowlarr** (9696) — set auth; add your indexers. Under *Settings →
    Indexers* add FlareSolverr: `http://flaresolverr:8191` (tag indexers
    that need it).
@@ -102,18 +103,22 @@ Work through `http://10.0.0.20:<port>` for each service:
    `tv`. Confirm *Settings → Importing → Use Hardlinks* is on (default).
 4. **Radarr** (7878) — same, with root folder `/data/media/movies` and
    category `movies`.
-5. Back in **Prowlarr** — *Settings → Apps*: add Sonarr
-   (`http://sonarr:8989` + its API key from *Settings → General*) and
-   Radarr (`http://radarr:7878`). Prowlarr now pushes all indexers to
-   both.
-6. **Bazarr** (6767) — connect Sonarr and Radarr (same URLs/API keys),
+5. **Lidarr** (8686) — same, with root folder `/data/media/music` and
+   category `music`.
+6. Back in **Prowlarr** — *Settings → Apps*: add Sonarr
+   (`http://sonarr:8989` + its API key from *Settings → General*),
+   Radarr (`http://radarr:7878`), and Lidarr (`http://lidarr:8686`).
+   Prowlarr now pushes all indexers to all three.
+7. **Bazarr** (6767) — connect Sonarr and Radarr (same URLs/API keys),
    pick subtitle providers and languages.
-7. **Jellyfin** (8096) — run the wizard; add libraries: *Movies* →
-   `/data/media/movies`, *Shows* → `/data/media/tv`.
-8. **Jellyseerr** (5055) — sign in with Jellyfin, connect Sonarr and
+8. **Jellyfin** (8096) — run the wizard; add libraries: *Movies* →
+   `/data/media/movies`, *Shows* → `/data/media/tv`, *Music* →
+   `/data/media/music`.
+9. **Jellyseerr** (5055) — sign in with Jellyfin, connect Sonarr and
    Radarr (URLs + API keys, default profiles/root folders). Family
-   requests → auto-download → appears in Jellyfin.
-9. **Audiobookshelf** (13378) — create the admin account; add libraries
+   requests → auto-download → appears in Jellyfin. (Music requests
+   aren't supported — add music directly in Lidarr.)
+10. **Audiobookshelf** (13378) — create the admin account; add libraries
    `/audiobooks` and `/podcasts`. Audiobook acquisition has no
    Sonarr-equivalent (Readarr is retired): add **AudioBook Bay** as an
    indexer in Prowlarr (needs FlareSolverr), search from Prowlarr,
@@ -121,10 +126,34 @@ Work through `http://10.0.0.20:<port>` for each service:
    `/data/torrents/audiobooks`), then move/organize into
    `/data/media/audiobooks` — Audiobookshelf's *Match* tool fixes
    metadata on import.
-10. **Kavita** (5000) — create the admin account; add a library pointing
+11. **Kavita** (5000) — create the admin account; add a library pointing
     at `/books`. Ebooks/comics follow the same acquisition flow as
     audiobooks (Prowlarr search → qBittorrent category `books` →
     organize into `/data/media/books`).
+
+## The *arr family — complete inventory
+
+What's running, what's deliberately not, and why:
+
+| *arr | Status here | Reason |
+|------|-------------|--------|
+| Sonarr (TV) | ✅ running | |
+| Radarr (movies) | ✅ running | |
+| Lidarr (music) | ✅ running | |
+| Prowlarr (indexers) | ✅ running | feeds all of the above |
+| Bazarr (subtitles) | ✅ running | companion, not technically an *arr fork |
+| **Overseerr** | ❌ — **Jellyseerr instead** | Overseerr only authenticates against Plex; Jellyseerr is its fork with Jellyfin support — same UI, same features |
+| **Readarr** (books/audiobooks) | ❌ retired upstream (2025) | project officially ended, repos archived. Books/audiobooks flow via Prowlarr manual search → qBittorrent → Audiobookshelf/Kavita (steps 10–11). [LazyLibrarian](https://gitlab.com/LazyLibrarian/LazyLibrarian) exists if you want automation back |
+| **Whisparr** (adult) | ⬜ present but commented | uncomment in the compose if wanted (port 6969) |
+
+Optional companions, also commented in the compose, worth enabling
+once the stack is settled (both need API keys → `.env`):
+
+- **Unpackerr** — watches the *arrs and auto-extracts rar'd releases so
+  imports never silently stall on an archive.
+- **Recyclarr** — syncs [TRaSH-guides](https://trash-guides.info)
+  quality profiles/custom formats into Sonarr/Radarr, so release
+  selection follows best practice without hand-tuning.
 
 ## Sharing the library (SMB)
 

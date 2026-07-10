@@ -63,6 +63,10 @@ AGPL option, but Valkey is the clean community answer.)
 | Jellyseerr | request portal | MIT | [github.com/fallenbagel/jellyseerr](https://github.com/fallenbagel/jellyseerr) | [docs.jellyseerr.dev](https://docs.jellyseerr.dev) |
 | Sonarr | TV automation | GPL-3.0 | [github.com/Sonarr/Sonarr](https://github.com/Sonarr/Sonarr) | [sonarr.tv](https://sonarr.tv) · [wiki](https://wiki.servarr.com/sonarr) |
 | Radarr | movie automation | GPL-3.0 | [github.com/Radarr/Radarr](https://github.com/Radarr/Radarr) | [radarr.video](https://radarr.video) · [wiki](https://wiki.servarr.com/radarr) |
+| Lidarr | music automation | GPL-3.0 | [github.com/Lidarr/Lidarr](https://github.com/Lidarr/Lidarr) | [lidarr.audio](https://lidarr.audio) · [wiki](https://wiki.servarr.com/lidarr) |
+| Unpackerr *(commented)* | auto-extract rar'd downloads | MIT | [github.com/Unpackerr/unpackerr](https://github.com/Unpackerr/unpackerr) | [unpackerr.zip](https://unpackerr.zip) |
+| Recyclarr *(commented)* | TRaSH profile sync for Sonarr/Radarr | MIT | [github.com/recyclarr/recyclarr](https://github.com/recyclarr/recyclarr) | [recyclarr.dev](https://recyclarr.dev) |
+| Whisparr *(commented)* | the adult *arr | GPL-3.0 | [github.com/Whisparr/Whisparr](https://github.com/Whisparr/Whisparr) | [wiki](https://wiki.servarr.com/whisparr) |
 | Prowlarr | indexer manager | GPL-3.0 | [github.com/Prowlarr/Prowlarr](https://github.com/Prowlarr/Prowlarr) | [wiki](https://wiki.servarr.com/prowlarr) |
 | Bazarr | subtitles | GPL-3.0 | [github.com/morpheus65535/bazarr](https://github.com/morpheus65535/bazarr) | [bazarr.media](https://www.bazarr.media) · [wiki](https://wiki.bazarr.media) |
 | qBittorrent | download client | GPL-2.0+ | [github.com/qbittorrent/qBittorrent](https://github.com/qbittorrent/qBittorrent) | [qbittorrent.org](https://www.qbittorrent.org) |

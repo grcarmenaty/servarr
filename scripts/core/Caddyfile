@@ -70,6 +70,10 @@ http://radarr.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:7878
 }
 
+http://lidarr.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:8686
+}
+
 http://prowlarr.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:9696
 }

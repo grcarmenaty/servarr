@@ -90,6 +90,16 @@ services:
       - ${CONFIG_ROOT}/radarr:/config
       - ${DATA_ROOT}:/data
 
+  lidarr: # music
+    <<: *common
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    ports:
+      - "8686:8686"
+    volumes:
+      - ${CONFIG_ROOT}/lidarr:/config
+      - ${DATA_ROOT}:/data
+
   prowlarr: # indexer manager
     <<: *common
     image: lscr.io/linuxserver/prowlarr:latest
@@ -98,6 +108,17 @@ services:
       - "9696:9696"
     volumes:
       - ${CONFIG_ROOT}/prowlarr:/config
+
+  # whisparr: # the adult-content *arr — uncomment if that's your thing
+  #   <<: *common
+  #   image: ghcr.io/hotio/whisparr:latest
+  #   container_name: whisparr
+  #   ports:
+  #     - "6969:6969"
+  #   volumes:
+  #     - ${CONFIG_ROOT}/whisparr:/config
+  #     - ${DATA_ROOT}:/data
+  # (there is NO readarr: it was retired upstream in 2025 — see docs/08)
 
   bazarr: # subtitles
     <<: *common
@@ -127,6 +148,36 @@ services:
     volumes:
       - ${CONFIG_ROOT}/qbittorrent:/config
       - ${DATA_ROOT}/torrents:/data/torrents
+
+  # ── optional companions (uncomment after first-run: both need API keys
+  #    from the *arrs' Settings → General; put them in .env) ──────────────
+  # unpackerr: # auto-extracts rar'd downloads so imports never stall
+  #   restart: unless-stopped
+  #   image: golift/unpackerr:latest
+  #   container_name: unpackerr
+  #   user: "${PUID:-1000}:${PGID:-1000}"
+  #   environment:
+  #     TZ: ${TZ:-Etc/UTC}
+  #     UN_SONARR_0_URL: http://sonarr:8989
+  #     UN_SONARR_0_API_KEY: ${SONARR_API_KEY}
+  #     UN_RADARR_0_URL: http://radarr:7878
+  #     UN_RADARR_0_API_KEY: ${RADARR_API_KEY}
+  #     UN_LIDARR_0_URL: http://lidarr:8686
+  #     UN_LIDARR_0_API_KEY: ${LIDARR_API_KEY}
+  #   volumes:
+  #     - ${DATA_ROOT}/torrents:/data/torrents
+  #
+  # recyclarr: # syncs TRaSH-guides quality profiles into sonarr/radarr
+  #   restart: unless-stopped
+  #   image: ghcr.io/recyclarr/recyclarr:latest
+  #   container_name: recyclarr
+  #   user: "${PUID:-1000}:${PGID:-1000}"
+  #   environment:
+  #     TZ: ${TZ:-Etc/UTC}
+  #   volumes:
+  #     - ${CONFIG_ROOT}/recyclarr:/config
+  #   # then: docker exec recyclarr recyclarr config create, edit
+  #   # /config/recyclarr.yml with the sonarr/radarr URLs + API keys
 
   # ── helper: solves Cloudflare challenges for Prowlarr indexers ────────
   flaresolverr:
