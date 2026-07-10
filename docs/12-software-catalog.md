@@ -118,7 +118,13 @@ AGPL option, but Valkey is the clean community answer.)
 Nothing in the platform *requires* any of these — drop them and
 everything still runs, minus that convenience.
 
-## Evaluated for later (all FOSS, deliberately not installed yet)
+## Evaluated for later (all FOSS unless flagged, deliberately not installed yet)
+
+Capacity reality check before adding from this list: ~57 GB of HA-protected
+RAM against ~80 GB two-survivor headroom means roughly **15–20 GB of
+comfortable HA budget left** (pinned/experimental guests can go beyond —
+they don't need absorbing). cloud-data (8 GB) comfortably takes 2–3 more
+small web apps; the AI VM's P40 has VRAM to spare for sidecars.
 
 | Software | What | License | Links | Why not yet |
 |----------|------|---------|-------|-------------|
@@ -134,6 +140,18 @@ everything still runs, minus that convenience.
 | LibreNMS | SNMP network monitoring | GPL-3.0 | [github](https://github.com/librenms/librenms) · [librenms.org](https://www.librenms.org) | valuable once a managed switch exists |
 | Pi-hole | AdGuard alternative | EUPL-1.2 | [github](https://github.com/pi-hole/pi-hole) · [pi-hole.net](https://pi-hole.net) | AdGuard Home chosen (single binary, DoH out of the box) |
 | Suwayomi | manga downloader/server (pairs with Kavita) | MPL-2.0 | [github](https://github.com/Suwayomi/Suwayomi-Server) | add to the servarr compose if manga sources beyond Kapowarr are wanted |
+| Forgejo | self-hosted git (host THIS repo at home) + actions CI | GPL-3.0+ | [codeberg.org/forgejo](https://codeberg.org/forgejo/forgejo) · [forgejo.org](https://forgejo.org) | single binary — perfect new LXC, `provision-*.sh` pattern |
+| BookStack | household wiki/documentation | MIT | [github](https://github.com/BookStackApp/BookStack) · [bookstackapp.com](https://www.bookstackapp.com) | cloud-data compose (shares Postgres? no — MySQL; brings its own) |
+| Karakeep | bookmarks/read-it-later with AI tagging | AGPL-3.0 | [github](https://github.com/karakeep-app/karakeep) · [karakeep.app](https://karakeep.app) | cloud-data; can point its AI features at the Ollama endpoint |
+| Grocy | groceries/chores/household ERP | MIT | [github](https://github.com/grocy/grocy) · [grocy.info](https://grocy.info) | cloud-data compose |
+| Homebox | home inventory (what's in which box, warranties) | AGPL-3.0 | [github](https://github.com/sysadminsmedia/homebox) | cloud-data compose, tiny |
+| ArchiveBox | permanent local archive of web pages | MIT | [github](https://github.com/ArchiveBox/ArchiveBox) · [archivebox.io](https://archivebox.io) | cloud-data compose |
+| ErsatzTV | build live "TV channels" from the Jellyfin library | Zlib | [github](https://github.com/ErsatzTV/ErsatzTV) · [ersatztv.org](https://ersatztv.org) | servarr VM compose — pure fun |
+| RomM | retro-game ROM library manager | AGPL-3.0 | [github](https://github.com/rommapp/romm) | servarr VM; pairs with the GTX 960 desktop VM |
+| ComfyUI | Stable Diffusion image generation (P40 runs SDXL) | GPL-3.0 | [github](https://github.com/comfyanonymous/ComfyUI) | **AI VM** — second compose next to Ollama |
+| Whisper + Piper (Wyoming) | local speech-to-text + TTS → Home Assistant voice assistant | MIT / MIT | [faster-whisper](https://github.com/SYSTRAN/faster-whisper) · [piper](https://github.com/OHF-Voice/piper1-gpl) · [wyoming](https://github.com/rhasspy/wyoming) | **AI VM** sidecars; makes HAOS a fully local voice assistant |
+| Conduit / Element | Matrix server + client (family chat) | Apache-2.0 / AGPL-3.0 | [conduit](https://gitlab.com/famedly/conduit) · [element](https://github.com/element-hq/element-web) | own small VM/LXC; only worth it if family actually adopts it |
+| Crafty Controller | Minecraft server manager | GPL-3.0 (⚠ the game server itself is proprietary Mojang software) | [gitlab](https://gitlab.com/crafty-controller/crafty-4) · [craftycontrol.com](https://craftycontrol.com) | own VM, easy to make a desktop-factory sibling |
 
 Placement rule of thumb when adding from this list: web app with a
 database → cloud-data compose; heavy/ML → its own VM; single Go/Rust
