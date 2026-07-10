@@ -83,6 +83,8 @@ if [[ ! -f .env ]]; then
         -e "s|^PAPERLESS_DB_PASSWORD=.*|PAPERLESS_DB_PASSWORD=$(rand 32)|" \
         -e "s|^PAPERLESS_SECRET_KEY=.*|PAPERLESS_SECRET_KEY=$(rand 48)|" \
         -e "s|^PAPERLESS_ADMIN_PASSWORD=.*|PAPERLESS_ADMIN_PASSWORD=$(rand 20)|" \
+        -e "s|^SEARXNG_SECRET=.*|SEARXNG_SECRET=$(rand 48)|" \
+        -e "s|^GUACAMOLE_DB_PASSWORD=.*|GUACAMOLE_DB_PASSWORD=$(rand 32)|" \
         .env
     chown "$LOGIN_USER:$LOGIN_USER" .env
     chmod 600 .env

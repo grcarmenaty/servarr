@@ -16,7 +16,7 @@ HA-protected like anything else.
 | Radarr | 7878 | movies — same |
 | Prowlarr | 9696 | indexer manager, syncs indexers into Sonarr/Radarr |
 | Bazarr | 6767 | subtitles for what Sonarr/Radarr import |
-| qBittorrent | 8080 | download client |
+| qBittorrent | 8080 | download client — the image runs **qbittorrent-nox** (headless daemon; the web UI is its only interface) |
 | FlareSolverr | 8191 | solves Cloudflare challenges for Prowlarr |
 | Gluetun (optional) | — | VPN tunnel + kill switch in front of qBittorrent |
 

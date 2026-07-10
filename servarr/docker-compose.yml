@@ -110,6 +110,9 @@ services:
       - ${DATA_ROOT}/media:/data/media
 
   # ── download client ───────────────────────────────────────────────────
+  # This image runs qbittorrent-nox — the headless daemon. No X/desktop
+  # inside; the web UI on :8080 IS the interface. Verify anytime with:
+  #   docker exec qbittorrent ps aux | grep qbittorrent-nox
   qbittorrent:
     <<: *common
     image: lscr.io/linuxserver/qbittorrent:latest

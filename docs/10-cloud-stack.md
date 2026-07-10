@@ -32,6 +32,7 @@ blip. All state lives one layer down, on a shared-services VM.
 | Firefly III | cloud-data :8082 | `http://money.home.lan` |
 | Firefly Importer | cloud-data :8081 | `http://money-import.home.lan` |
 | Paperless-ngx | cloud-data :8000 | `http://paperless.home.lan` |
+| SearXNG | cloud-data :8083 | `http://search.home.lan` |
 
 (The "Redis" service is actually **Valkey** — BSD-licensed, protocol
 identical; Redis itself stopped being open source at 7.4. See docs/12.)
@@ -210,6 +211,23 @@ searchable. Three ways in:
 
 Storage is on the backed-up cloud-data disk; the `export/` dir +
 `document_exporter` gives a portable dump for extra safety.
+
+## SearXNG (private web search)
+
+`http://search.home.lan` — a metasearch engine that queries
+Google/Bing/DDG/Wikipedia/etc. on your behalf and returns merged
+results with **no tracking, no profiling, no ads**. Zero accounts by
+design (your searches stay anonymous even at home).
+
+- **Set it as the browser default**: most browsers → add custom search
+  engine → `http://search.home.lan/search?q=%s`. Works on phones over
+  WireGuard too.
+- **Tune engines**: first visit → *Preferences* (per-browser via
+  cookie), or globally in `/opt/cloud/config/searxng/settings.yml`
+  (created on first run) + `docker compose restart searxng`.
+- **Enable the JSON API** (needed for the AI assistant's web search,
+  docs/16): in `settings.yml` add `json` under `search: formats:`,
+  restart.
 
 ## Upgrades — the one multi-instance gotcha
 

@@ -187,6 +187,15 @@ It's in a *different* node, so it can't help the AI VM. Two options:
   already argues direct play makes transcoding rarely matter, so only
   do this if transcoding is actually a daily pain.
 
+## Give the assistant web search (SearXNG)
+
+Once SearXNG is up (docs/10): Open WebUI *Admin Panel → Settings → Web
+Search* → engine `searxng`, query URL
+`http://10.0.0.22:8083/search?q=<query>&format=json`. (Enable the JSON
+format in SearXNG's `settings.yml` first — docs/10 §SearXNG.) Chats can
+then toggle live web search, with the searching done anonymously by
+your own metasearch instance.
+
 ## Day-2
 
 - Update: `docker compose pull && docker compose up -d` (models are

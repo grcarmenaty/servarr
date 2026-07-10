@@ -115,6 +115,10 @@ http://paperless.@DOMAIN@ {
 	reverse_proxy @CLOUDDATA_IP@:8000
 }
 
+http://search.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8083
+}
+
 http://photos.@DOMAIN@ {
 	reverse_proxy @PHOTOS_IP@:2283
 }

@@ -84,6 +84,7 @@ AGPL option, but Valkey is the clean community answer.)
 | Firefly Data Importer | bank/CSV imports | AGPL-3.0 | [github.com/firefly-iii/data-importer](https://github.com/firefly-iii/data-importer) | [docs](https://docs.firefly-iii.org/how-to/data-importer/) |
 | Paperless-ngx | document archive + OCR | GPL-3.0 | [github.com/paperless-ngx/paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) | [docs.paperless-ngx.com](https://docs.paperless-ngx.com) |
 | Immich | photo backup + ML search | AGPL-3.0 | [github.com/immich-app/immich](https://github.com/immich-app/immich) | [immich.app](https://immich.app) · [docs](https://immich.app/docs) |
+| SearXNG | private metasearch engine | AGPL-3.0 | [github.com/searxng/searxng](https://github.com/searxng/searxng) | [docs.searxng.org](https://docs.searxng.org) |
 | NFS (nfs-kernel-server) | shared Nextcloud state | GPL-2.0 | [git.kernel.org](https://git.kernel.org) | [linux-nfs.org](https://linux-nfs.org) |
 | Vaultwarden *(extra)* | Bitwarden-compatible passwords | AGPL-3.0 | [github.com/dani-garcia/vaultwarden](https://github.com/dani-garcia/vaultwarden) | [wiki](https://github.com/dani-garcia/vaultwarden/wiki) |
 | Syncthing *(extra)* | device file sync | MPL-2.0 | [github.com/syncthing/syncthing](https://github.com/syncthing/syncthing) | [syncthing.net](https://syncthing.net) · [docs](https://docs.syncthing.net) |

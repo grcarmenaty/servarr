@@ -17,7 +17,7 @@ rationale in docs/08), one optional VM, and some policy.
 | ntfy — self-hosted push notifications | LXC | 106 | 10.0.0.10 | `http://ntfy.home.lan` |
 | Servarr — media stack (docs/08) | VM | 200 | 10.0.0.20 | `http://jellyfin.home.lan` |
 | Home Assistant OS — smart home | VM | 201 | 10.0.0.21 | `http://hass.home.lan` |
-| cloud-data — Postgres/Redis/NFS + Firefly (docs/10) | VM | 202 | 10.0.0.22 | `http://money.home.lan` |
+| cloud-data — Postgres/Valkey/NFS + Firefly/Paperless/SearXNG/Guacamole (docs/10) | VM | 202 | 10.0.0.22 | `http://money.home.lan` |
 | cloud1 + cloud2 — Nextcloud app pair (docs/10) | VM ×2 | 203/204 | 10.0.0.23/.24 | `http://cloud.home.lan` |
 | photos — Immich (docs/11) | VM | 205 | 10.0.0.25 | `http://photos.home.lan` |
 | wazuh — SIEM (docs/14) | VM | 206 | 10.0.0.26 | `http://siem.home.lan` |

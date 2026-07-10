@@ -38,6 +38,21 @@ services:
     ports:
       - "6379:6379"
 
+  # ── SearXNG (private metasearch — search.home.lan) ─────────────────────
+  # Aggregates results from many engines; no tracking, no profiling.
+  # Also serves as Open WebUI's web-search backend (docs/16).
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    container_name: searxng
+    restart: unless-stopped
+    environment:
+      SEARXNG_BASE_URL: http://search.home.lan/
+      SEARXNG_SECRET: ${SEARXNG_SECRET}
+    ports:
+      - "8083:8080"
+    volumes:
+      - ${CONFIG_ROOT}/searxng:/etc/searxng
+
   # ── Apache Guacamole (browser remote-desktop portal — docs/15) ─────────
   guacd:
     image: guacamole/guacd:latest
