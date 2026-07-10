@@ -56,18 +56,50 @@ NVIDIA hardware.
 
 ## Deploy
 
-### 1. Host prep (on the P40 node, once)
+⚠ **Location matters in this doc more than anywhere else in the repo.**
+Unlike every other VM (creatable from any node), the GPU steps are tied
+to one physical machine. First, declare which node holds the P40 in
+`scripts/cluster.env`:
 
-BIOS: *Above 4G Decoding* on. Then:
+```bash
+# on each node, find the card:
+lspci -nn | grep -i nvidia
+# then in scripts/cluster.env:
+GPU_NODE="node3"        # ← the node where the P40 actually sits
+```
+
+Where each step runs — the scripts also enforce this (16 refuses on the
+wrong node; 26 asks):
+
+| Step | Runs on | Why there |
+|------|---------|-----------|
+| 1. BIOS: Above 4G Decoding | **GPU node** (physical console) | board setting of the machine holding the card |
+| 2. `26-prepare-gpu-passthrough.sh` + reboot | **GPU node only** | binds *that node's* PCI device to vfio-pci |
+| 3. `16-create-ai-vm.sh` | **GPU node only** | `hostpci` passthrough only works where the device is |
+| 4. `ai/bootstrap.sh` (×2) + `docker compose` | **inside the AI VM** (10.0.0.27) | guest-side driver + stack |
+| 5. Account setup | any browser | it's just the web UI |
+
+Everything below repeats these locations inline.
+
+### 1. Host prep — ⚠ GPU node only, once
+
+On the **GPU node's** BIOS: *Above 4G Decoding* on. Then, SSH **to the
+GPU node** (`ssh root@<GPU node>` — not node1 unless the card is there):
 
 ```bash
 lspci -nn | grep -i nvidia                      # note the address, e.g. 01:00.0
 bash /root/scripts/26-prepare-gpu-passthrough.sh 01:00
-# migrate guests off (docs/06), reboot the node, then verify:
+# migrate guests off THIS node (docs/06), reboot THIS node, then verify:
 lspci -nnks 01:00                               # Kernel driver in use: vfio-pci
 ```
 
-### 2. Create the VM (on the same node)
+The reboot is of the **GPU node** — HA moves its guests to the other
+two meanwhile.
+
+### 2. Create the VM — ⚠ GPU node only
+
+Still on the **GPU node** (the script exits with an error on any other
+node):
 
 ```bash
 bash /root/scripts/16-create-ai-vm.sh 01:00
@@ -76,12 +108,15 @@ bash /root/scripts/16-create-ai-vm.sh 01:00
 (q35 + OVMF + the GPU as `hostpci0`, ballooning off, 300 G model disk
 excluded from backups — models re-download.)
 
-### 3. Bootstrap (two passes — driver needs a reboot)
+### 3. Bootstrap — inside the AI VM (two passes; driver needs a reboot)
+
+These run **in the VM** (10.0.0.27), not on any node — the `ssh` target
+changes here:
 
 ```bash
 scp -r ai cloud@10.0.0.27:~ && ssh cloud@10.0.0.27
 cd ai && sudo bash bootstrap.sh      # pass 1: NVIDIA driver → sudo reboot
-ssh cloud@10.0.0.27
+ssh cloud@10.0.0.27                  # (only the VM reboots, not the node)
 cd ai && sudo bash bootstrap.sh      # pass 2: disk, docker, GPU runtime
 # re-login, then:
 docker compose up -d
@@ -140,8 +175,10 @@ about capacity, not speed.
 It's in a *different* node, so it can't help the AI VM. Two options:
 
 - **Desktop/experiment VM** (recommended): run
-  `26-prepare-gpu-passthrough.sh` on its node, then attach it to a
-  desktop VM from the factory (`qm set <vmid> --hostpci0 0000:XX:00,pcie=1`,
+  `26-prepare-gpu-passthrough.sh` **on the 960's own node** (the script
+  will notice it isn't `GPU_NODE` and ask — answering yes is correct
+  here), then attach the card to a desktop VM created **on that same
+  node** (`qm set <vmid> --hostpci0 0000:XX:00,pcie=1`,
   `--machine q35 --bios ovmf` at creation). Light CUDA, retro gaming,
   a second tiny Ollama (3B models) — its VM is pinned like the AI VM.
 - **Jellyfin NVENC**: pass it to the servarr VM instead for hardware

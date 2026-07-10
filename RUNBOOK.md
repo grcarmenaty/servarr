@@ -14,6 +14,16 @@ Conventions used everywhere below:
 | Domain | `home.lan` |
 | Root password | same on all 3 nodes (write it down now) |
 
+**Where commands run** — every command block below is one of:
+
+| Marker | Meaning |
+|--------|---------|
+| *(any node)* | cluster-wide effect; run on whichever node you're logged into |
+| *(each node)* | must be repeated on node1, node2, AND node3 |
+| *(nodeN only)* | that specific node |
+| ⚠ *(GPU node only)* | **only** the node physically holding the GPU — set `GPU_NODE=` in `cluster.env`; the GPU scripts refuse to run elsewhere |
+| *(inside VM x.x.x.x)* | SSH into that guest, not a node |
+
 Rough wall-clock: Phases 0–8 (cluster ready) ≈ one afternoon.
 Phases 9–12 (all services) ≈ a weekend, mostly waiting on downloads.
 
@@ -315,16 +325,24 @@ cd wazuh && sudo WAZUH_VERSION=4.14.6 bash bootstrap.sh
 `bash 25-install-wazuh-agent.sh` on each node, `scp`+run in each VM,
 `pct push`+exec in each LXC.
 
-**9g. AI assistant** (when the GPU node has its Tesla P40) — `docs/16`:
+**9g. AI assistant** — `docs/16`. ⚠ **GPU-node-only phase**: steps 1–3
+run exclusively on the node physically holding the Tesla P40 — set
+`GPU_NODE=` in `cluster.env` first (`lspci -nn | grep -i nvidia` on
+each node to find it). The scripts refuse to run on the wrong node.
+
 ```bash
-# on the P40 node — BIOS: Above 4G Decoding ON first:
+# 0. (any node) set GPU_NODE in scripts/cluster.env, re-copy scripts to nodes
+# 1. ⚠ GPU node only — BIOS: Above 4G Decoding ON, then:
+ssh root@<GPU-node-IP>
 lspci -nn | grep -i nvidia                      # e.g. 01:00.0
 bash /root/scripts/26-prepare-gpu-passthrough.sh 01:00
-# migrate guests off, reboot the node, verify vfio-pci, then:
+# 2. ⚠ GPU node only — migrate ITS guests off, reboot THAT node,
+#    verify 'vfio-pci', then still on the GPU node:
 bash /root/scripts/16-create-ai-vm.sh 01:00
+# 3. (inside VM 10.0.0.27) — the VM, not a node:
 scp -r ai cloud@10.0.0.27:~ && ssh cloud@10.0.0.27
-cd ai && sudo bash bootstrap.sh     # pass 1 → sudo reboot
-# after VM reboot: pass 2, then docker compose up -d, pull a model
+cd ai && sudo bash bootstrap.sh     # pass 1 → sudo reboot (VM only)
+# after the VM reboot: pass 2, then docker compose up -d, pull a model
 ```
 → **first signup = admin** at `http://chat.home.lan`, then
 `ENABLE_SIGNUP=false` in `.env` + `docker compose up -d`.

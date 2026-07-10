@@ -13,6 +13,14 @@ require_pve
 
 GPU="${1:-}"
 [[ "$GPU" =~ ^[0-9a-f]{2}:[0-9a-f]{2}$ ]] || die "usage: $0 <pci-addr like 01:00>"
+
+# hard guard: the AI VM belongs on the P40 node (GPU_NODE in cluster.env)
+if [[ -n "${GPU_NODE:-}" && "$(hostname)" != "$GPU_NODE" ]]; then
+    die "this is $(hostname) — the AI VM must be created on ${GPU_NODE} (GPU_NODE in cluster.env).
+       SSH there and run this script again. (If the P40 genuinely lives here,
+       update GPU_NODE in cluster.env first.)"
+fi
+
 lspci -s "$GPU" >/dev/null 2>&1 || die "no device at ${GPU} — run this on the GPU node"
 DRIVER="$(lspci -nnks "$GPU" | sed -n 's/.*Kernel driver in use: //p' | head -1)"
 [[ "$DRIVER" == "vfio-pci" ]] || die "GPU at ${GPU} is bound to '${DRIVER:-nothing}', not vfio-pci — run 26-prepare-gpu-passthrough.sh + reboot first"
