@@ -107,8 +107,9 @@ anti-affinity rules so the redundant pairs never share a node. What
 | Proxmox cluster | 3-node quorum | none |
 | cloud-data (DB/NFS) | HA restart | ~2–3 min (Nextcloud stalls, resumes) |
 | Jellyfin / *arrs / HAOS | HA restart | ~2–3 min |
-| Caddy, WireGuard, Kuma | HA restart | ~1–2 min (LXCs restart fast) |
-| AI VM / GPU or desktop VMs | none — pinned by PCI passthrough | down until their node returns (docs/16) |
+| Caddy, WireGuard, Kuma, ntfy, Forgejo | HA restart | ~1–2 min (LXCs restart fast) |
+| AI assistant (CPU, default) | HA restart | ~2–3 min |
+| desktop VMs / AI VM *with* GPU | none — pinned by PCI passthrough | down until their node returns (docs/15/16) |
 
 The restart tier is a genuine limit of single-instance software, not of
 the cluster: Jellyfin, Home Assistant, and Postgres can't run
@@ -118,8 +119,14 @@ it (hard-reset a node, watch it recover) is what turns "should work"
 into "guaranteed".
 
 Capacity check for full-node absorption: HA-protected RAM is
-servarr 16 + cloud tier 16 + photos 8 + wazuh 8 + HAOS 4 + LXCs ~5 ≈
-**57 GB**, against ~80 GB of headroom on two surviving nodes. Getting
-chunky but fine — recheck this arithmetic before HA-protecting anything
-new (throwaway desktop VMs from `scripts/30` are deliberately NOT
-HA-enrolled and don't count, nor does the node-pinned AI VM).
+servarr 16 + cloud tier 18 + photos 8 + wazuh 8 + ai 12 + HAOS 4 +
+LXCs ~6 ≈ **72 GB**, against ~80 GB of headroom on two surviving nodes.
+**This is now tight** — a single node failure lands ~72 GB onto two
+nodes with ~128 GB of raw RAM between them (192 − 64), and after Ceph
+OSDs + Proxmox take their ~24 GB each, the survivors have roughly
+80 GB free for guests. It fits, but there's little slack: before
+HA-protecting anything else, either grow RAM, or drop something from
+the HA set (Wazuh and the AI VM are the usual candidates to leave
+un-HA'd — both self-restart fine, just not automatically). Throwaway
+desktop VMs (`scripts/30`) and a GPU-attached AI VM don't count — they
+can't migrate anyway.

@@ -15,10 +15,9 @@ require_pve
 ADDR="${1:-}"
 [[ "$ADDR" =~ ^[0-9a-f]{2}:[0-9a-f]{2}$ ]] || die "usage: $0 <pci-addr like 01:00>   (see: lspci -nn | grep -i nvidia)"
 
-# guard: is this the node you meant? (GPU_NODE = the P40/AI node in cluster.env;
-# preparing the GTX 960 on ITS node is also legitimate — hence a prompt, not a die)
+# guard: is this the node you meant? (GPU_NODE = the GTX 960 node in cluster.env)
 if [[ -n "${GPU_NODE:-}" && "$(hostname)" != "$GPU_NODE" ]]; then
-    warn "this node is $(hostname), but GPU_NODE in cluster.env is '${GPU_NODE}' (the P40/AI node)."
+    warn "this node is $(hostname), but GPU_NODE in cluster.env is '${GPU_NODE}' (the GPU node)."
     warn "Continuing is only correct if you are deliberately preparing a DIFFERENT"
     warn "GPU on this node (e.g. the GTX 960 for a desktop VM — docs/16)."
     confirm "Prepare passthrough on $(hostname) anyway?" || die "aborted — run this on ${GPU_NODE}"

@@ -278,14 +278,16 @@ sudo bash setup-samba.sh                        # media SMB share
 → then docs/08 first-run order (qBittorrent → Prowlarr → Sonarr →
 Radarr → Bazarr → Jellyfin → Jellyseerr → Audiobookshelf → Kavita).
 
-**9b. Core LXCs** — `docs/09`:
+**9b. Core LXCs** — `docs/09` (now 7: adguard, caddy, wireguard, kuma,
+adguard2, ntfy, forgejo):
 ```bash
 bash /root/scripts/11-create-core-lxcs.sh all --ha
 ```
 → AdGuard wizards on `:3000` at 10.0.0.5 **and** 10.0.0.9 (DNS
 rewrites table in docs/09) → **router DHCP DNS = 10.0.0.5 + 10.0.0.9**
 → WireGuard: DDNS + forward UDP 51820 → 10.0.0.7, `wg-add-peer phone`
-→ Kuma admin + monitors → ntfy topic in Kuma + phone app.
+→ Kuma admin + monitors → ntfy topic in Kuma + phone app → Forgejo
+admin account (`git.home.lan`, provisioner prints the command).
 
 **9c. Home Assistant** (optional): `bash /root/scripts/12-create-haos-vm.sh --ha`
 → reserve 10.0.0.21 for the printed MAC in the router.
@@ -307,6 +309,9 @@ docker compose up -d --build     # wait for http://10.0.0.23:8080 login page
 account → bank connections (docs/10 §banks) → Paperless admin login.
 Optional, same VM: `sudo bash setup-taiga.sh` + `taiga-manage.sh
 createsuperuser` → project boards at `http://taiga.home.lan`.
+The household apps (Karakeep, Mealie, Grocy, Homebox, FreshRSS,
+ArchiveBox, BookStack, Element/Matrix) come up with cloud-data's
+`docker compose up -d` — first-run notes per app in docs/10.
 
 **9e. Photos** — `docs/11`:
 ```bash
@@ -327,27 +332,20 @@ cd wazuh && sudo WAZUH_VERSION=4.14.6 bash bootstrap.sh
 `bash 25-install-wazuh-agent.sh` on each node, `scp`+run in each VM,
 `pct push`+exec in each LXC.
 
-**9g. AI assistant** — `docs/16`. ⚠ **GPU-node-only phase**: steps 1–3
-run exclusively on the node physically holding the Tesla P40 — set
-`GPU_NODE=` in `cluster.env` first (`lspci -nn | grep -i nvidia` on
-each node to find it). The scripts refuse to run on the wrong node.
-
+**9g. AI assistant + local voice** — `docs/16`. **CPU by default** — a
+normal VM, any node, no GPU needed:
 ```bash
-# 0. (any node) set GPU_NODE in scripts/cluster.env, re-copy scripts to nodes
-# 1. ⚠ GPU node only — BIOS: Above 4G Decoding ON, then:
-ssh root@<GPU-node-IP>
-lspci -nn | grep -i nvidia                      # e.g. 01:00.0
-bash /root/scripts/26-prepare-gpu-passthrough.sh 01:00
-# 2. ⚠ GPU node only — migrate ITS guests off, reboot THAT node,
-#    verify 'vfio-pci', then still on the GPU node:
-bash /root/scripts/16-create-ai-vm.sh 01:00
-# 3. (inside VM 10.0.0.27) — the VM, not a node:
+bash /root/scripts/16-create-ai-vm.sh              # any node
 scp -r ai cloud@10.0.0.27:~ && ssh cloud@10.0.0.27
-cd ai && sudo bash bootstrap.sh     # pass 1 → sudo reboot (VM only)
-# after the VM reboot: pass 2, then docker compose up -d, pull a model
+cd ai && sudo bash bootstrap.sh                    # single pass (CPU)
+docker compose up -d
+docker exec ollama ollama pull qwen3:8b
 ```
 → **first signup = admin** at `http://chat.home.lan`, then
-`ENABLE_SIGNUP=false` in `.env` + `docker compose up -d`.
+`ENABLE_SIGNUP=false` in `.env` + `docker compose up -d`. Add the
+Whisper/Piper Wyoming services to Home Assistant for local voice
+(docs/16). Optional GTX 960 acceleration (pins the VM, drops HA) is the
+appendix in docs/16 — skip it unless you want it.
 
 **Checkpoint 9**: `http://home.lan` portal loads from a LAN device and
 **every tile works**; phone on mobile data connects via WireGuard and

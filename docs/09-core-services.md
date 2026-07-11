@@ -15,13 +15,14 @@ rationale in docs/08), one optional VM, and some policy.
 | WireGuard — remote access VPN | LXC | 103 | 10.0.0.7 | (UDP 51820) |
 | Uptime Kuma — monitoring/alerts | LXC | 104 | 10.0.0.8 | `http://status.home.lan` |
 | ntfy — self-hosted push notifications | LXC | 106 | 10.0.0.10 | `http://ntfy.home.lan` |
+| Forgejo — self-hosted git + CI | LXC | 107 | 10.0.0.14 | `http://git.home.lan` |
 | Servarr — media stack (docs/08) | VM | 200 | 10.0.0.20 | `http://jellyfin.home.lan` |
 | Home Assistant OS — smart home | VM | 201 | 10.0.0.21 | `http://hass.home.lan` |
 | cloud-data — Postgres/Valkey/NFS + Firefly/Paperless/SearXNG/Guacamole/Taiga (docs/10) | VM | 202 | 10.0.0.22 | `http://money.home.lan` |
 | cloud1 + cloud2 — Nextcloud app pair (docs/10) | VM ×2 | 203/204 | 10.0.0.23/.24 | `http://cloud.home.lan` |
 | photos — Immich (docs/11) | VM | 205 | 10.0.0.25 | `http://photos.home.lan` |
 | wazuh — SIEM (docs/14) | VM | 206 | 10.0.0.26 | `http://siem.home.lan` |
-| ai — Ollama + Open WebUI, GPU (docs/16) | VM | 207 | 10.0.0.27 | `http://chat.home.lan` |
+| ai — Ollama + Open WebUI + voice, CPU (docs/16) | VM | 207 | 10.0.0.27 | `http://chat.home.lan` |
 | desktop VMs — on demand (docs/15) | VM | 300+ | DHCP | `http://desktop.home.lan` (Guacamole) |
 
 After everything exists, `bash scripts/20-enable-ha.sh` enrolls it all
@@ -124,6 +125,15 @@ Google/Telegram middleman (works remotely over WireGuard). Telegram/
 email/Discord remain options if you prefer. Monitor from the outside
 too if you want rigor: Kuma can't tell you the whole cluster lost
 power (see UPS below).
+
+## Forgejo (self-hosted git)
+
+`http://git.home.lan` — a lightweight GitHub-alike (single Go binary,
+SQLite). Registration is disabled; the provisioner prints the one-liner
+to create your admin account. Push this very repo here to close the
+loop — the cluster hosting its own build source. Forgejo Actions (CI)
+is available if you later want automated checks; a runner is a small
+addition to this LXC or its own.
 
 ## Home Assistant (optional)
 

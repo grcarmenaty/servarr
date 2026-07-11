@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
-# Create the AI VM with GPU passthrough (docs/16). Run ON THE GPU NODE,
-# after 26-prepare-gpu-passthrough.sh + reboot.
+# Create the AI VM (Ollama + Open WebUI + Whisper/Piper — docs/16).
+# CPU inference by default → a normal VM, creatable on ANY node,
+# migratable, HA-enrollable.
 #
-#   bash 16-create-ai-vm.sh 01:00        # the GPU's PCI address (no .0)
-#
-# The VM is pinned to this node by the passthrough — deliberately NOT
-# HA-enrolled (a GPU VM can't migrate).
+#   bash 16-create-ai-vm.sh                # CPU (default, recommended)
+#   bash 16-create-ai-vm.sh --gpu 01:00    # optional: GTX 960 passthrough —
+#                                          # ⚠ must run ON the GPU node, after
+#                                          # 26-prepare-gpu-passthrough.sh;
+#                                          # pins the VM, drops HA (docs/16)
 
 source "$(dirname "$0")/lib.sh"
 require_root
 require_pve
 
-GPU="${1:-}"
-[[ "$GPU" =~ ^[0-9a-f]{2}:[0-9a-f]{2}$ ]] || die "usage: $0 <pci-addr like 01:00>"
-
-# hard guard: the AI VM belongs on the P40 node (GPU_NODE in cluster.env)
-if [[ -n "${GPU_NODE:-}" && "$(hostname)" != "$GPU_NODE" ]]; then
-    die "this is $(hostname) — the AI VM must be created on ${GPU_NODE} (GPU_NODE in cluster.env).
-       SSH there and run this script again. (If the P40 genuinely lives here,
-       update GPU_NODE in cluster.env first.)"
+GPU=""
+if [[ "${1:-}" == "--gpu" ]]; then
+    GPU="${2:-}"
+    [[ "$GPU" =~ ^[0-9a-f]{2}:[0-9a-f]{2}$ ]] || die "usage: $0 [--gpu <pci-addr like 01:00>]"
+    if [[ -n "${GPU_NODE:-}" && "$(hostname)" != "$GPU_NODE" ]]; then
+        die "GPU passthrough must run on ${GPU_NODE} (GPU_NODE in cluster.env) — this is $(hostname)"
+    fi
+    lspci -s "$GPU" >/dev/null 2>&1 || die "no device at ${GPU} on this node"
+    DRIVER="$(lspci -nnks "$GPU" | sed -n 's/.*Kernel driver in use: //p' | head -1)"
+    [[ "$DRIVER" == "vfio-pci" ]] || die "GPU at ${GPU} is bound to '${DRIVER:-nothing}', not vfio-pci — run 26-prepare-gpu-passthrough.sh + reboot first"
 fi
-
-lspci -s "$GPU" >/dev/null 2>&1 || die "no device at ${GPU} — run this on the GPU node"
-DRIVER="$(lspci -nnks "$GPU" | sed -n 's/.*Kernel driver in use: //p' | head -1)"
-[[ "$DRIVER" == "vfio-pci" ]] || die "GPU at ${GPU} is bound to '${DRIVER:-nothing}', not vfio-pci — run 26-prepare-gpu-passthrough.sh + reboot first"
 
 IMG_URL="https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
 IMG="/var/lib/vz/template/$(basename "$IMG_URL")"
@@ -43,7 +43,7 @@ if [[ ! -f "$IMG" ]]; then
     mv "${IMG}.part" "$IMG"
 fi
 
-log "Creating VM ${AI_VMID} (${AI_NAME}): ${AI_CORES} cores, $((AI_MEMORY_MB / 1024)) GB RAM, GPU ${GPU}"
+log "Creating VM ${AI_VMID} (${AI_NAME}): ${AI_CORES} cores, $((AI_MEMORY_MB / 1024)) GB RAM${GPU:+, GPU ${GPU}}"
 qm create "${AI_VMID}" \
     --name "${AI_NAME}" \
     --memory "${AI_MEMORY_MB}" \
@@ -65,8 +65,10 @@ qm disk resize "${AI_VMID}" scsi0 "${AI_ROOT_GB}G"
 log "Adding ${AI_DATA_GB}G model disk (thin, excluded from backups — models re-download)"
 qm set "${AI_VMID}" --scsi1 "${VM_POOL}:${AI_DATA_GB},discard=on,iothread=1,backup=0"
 
-log "Attaching GPU ${GPU} (all functions, PCIe)"
-qm set "${AI_VMID}" --hostpci0 "0000:${GPU},pcie=1"
+if [[ -n "$GPU" ]]; then
+    log "Attaching GPU ${GPU} — VM is now PINNED to $(hostname); do not HA-enroll it"
+    qm set "${AI_VMID}" --hostpci0 "0000:${GPU},pcie=1"
+fi
 
 qm set "${AI_VMID}" \
     --ide2 "${VM_POOL}:cloudinit" \
@@ -80,11 +82,11 @@ qm set "${AI_VMID}" \
 qm start "${AI_VMID}"
 
 echo
-log "VM created (pinned to $(hostname) — not HA). Give cloud-init a minute, then:"
+log "VM created. Give cloud-init a minute, then:"
 echo "  scp -r ai ${CLOUD_USER}@${AI_IP}:~"
 echo "  ssh ${CLOUD_USER}@${AI_IP}"
-echo "  cd ai && sudo bash bootstrap.sh      # installs driver, asks to reboot"
-echo "  # after the VM reboots:"
-echo "  cd ai && sudo bash bootstrap.sh      # second pass: docker + stack"
+echo "  cd ai && sudo bash bootstrap.sh"
+[[ -n "$GPU" ]] && echo "  (GPU path: bootstrap will install the driver and ask for one VM reboot)"
 echo
+echo "HA: 20-enable-ha.sh auto-enrolls this VM only when it has no GPU attached."
 echo "Full walkthrough: docs/16-ai-assistant.md"

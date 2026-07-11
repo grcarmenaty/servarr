@@ -11,6 +11,8 @@ HA-protected like anything else.
 | Jellyfin | 8096 | media server (the thing you watch) |
 | Audiobookshelf | 13378 | audiobook + podcast server (apps on every platform) |
 | Kavita | 5000 | ebooks, comics & manga reader/server |
+| ErsatzTV | 8409 | builds live "TV channels" from your library (`tv.home.lan`) |
+| RomM | 8095 | retro-game ROM library manager (`games.home.lan`) |
 | Jellyseerr | 5055 | request portal (the thing family asks for movies with) |
 | Sonarr | 8989 | TV — monitors, grabs, renames, imports |
 | Radarr | 7878 | movies — same |
@@ -170,6 +172,17 @@ once the stack is settled (both need API keys → `.env`):
 - **Recyclarr** — syncs [TRaSH-guides](https://trash-guides.info)
   quality profiles/custom formats into Sonarr/Radarr, so release
   selection follows best practice without hand-tuning.
+
+## Fun extras (ErsatzTV, RomM)
+
+- **ErsatzTV** (`tv.home.lan`) — assemble your movies/shows into
+  scheduled "channels" with an XMLTV guide, then add its channels as a
+  Live TV source in Jellyfin. Mounts the media library read-only.
+  Configure channels in its own UI.
+- **RomM** (`games.home.lan`) — catalogs retro-game ROMs from
+  `/data/media/roms` (organized by platform sub-folder), with box art
+  and metadata scraping. Play in-browser, or pair with the GTX 960
+  desktop VM (docs/15) for emulators. Legal note: supply your own ROMs.
 
 ## Sharing the library (SMB)
 

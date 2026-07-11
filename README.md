@@ -72,7 +72,7 @@ triple-replicated, ~6.3 TB safe working set.
 | `docs/13-security-and-network-monitoring.md` | Threat model, hardening, firewall, traffic monitoring |
 | `docs/14-wazuh-siem.md` | Wazuh SIEM: agents everywhere, FIM, CVE + CIS scanning |
 | `docs/15-remote-desktops.md` | Dynamic desktop VMs + Guacamole browser portal |
-| `docs/16-ai-assistant.md` | GPU passthrough, Ollama + Open WebUI authenticated AI endpoint |
+| `docs/16-ai-assistant.md` | CPU Ollama + Open WebUI authenticated endpoint + local voice (optional GPU) |
 | `scripts/cluster.env` | Single config file — edit this first |
 | `scripts/*.sh` | Setup scripts, numbered in execution order |
 | `scripts/core/` | Provisioning scripts + configs for the core service LXCs |
@@ -80,7 +80,7 @@ triple-replicated, ~6.3 TB safe working set.
 | `cloud/` | Compose stacks for the cloud tier (`data/` + `app/` × 2 VMs) |
 | `photos/` | Bootstrap for the Immich VM (fetches Immich's official compose) |
 | `wazuh/` | Bootstrap for the Wazuh VM (official single-node deployment) |
-| `ai/` | Compose + bootstrap for the GPU AI VM (Ollama + Open WebUI) |
+| `ai/` | Compose + bootstrap for the AI VM (Ollama + Open WebUI + voice; CPU, optional GPU overlay) |
 
 ## Setup order
 

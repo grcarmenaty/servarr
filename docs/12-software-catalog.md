@@ -35,15 +35,17 @@ AGPL option, but Valkey is the clean community answer.)
 | Xfce | desktop environment in desktop VMs | GPL/LGPL | [gitlab.xfce.org](https://gitlab.xfce.org) | [xfce.org](https://xfce.org) |
 | noVNC / SPICE | in-browser + rich VM consoles (part of PVE) | MPL-2.0 / LGPL | [github.com/novnc/noVNC](https://github.com/novnc/noVNC) · [spice-space.org](https://www.spice-space.org) | [virt-viewer](https://virt-manager.org) |
 
-## AI tier (VM 207, GPU passthrough)
+## AI tier (VM 207, CPU by default)
 
 | Software | Role | License | Source | Site/Docs |
 |----------|------|---------|--------|-----------|
-| Ollama | LLM inference server | MIT | [github.com/ollama/ollama](https://github.com/ollama/ollama) | [ollama.com](https://ollama.com) |
+| Ollama | LLM inference server (CPU, optional GPU) | MIT | [github.com/ollama/ollama](https://github.com/ollama/ollama) | [ollama.com](https://ollama.com) |
 | llama.cpp | inference engine under Ollama | MIT | [github.com/ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) | — |
 | Open WebUI | authenticated chat UI + OpenAI-compatible API | ⚠ "Open WebUI License" — BSD-3 **plus a branding-protection clause** (≥ v0.6); not OSI-listed. Functionally open; the one licensing asterisk in the stack. Pure-MIT alternative: [LibreChat](https://github.com/danny-avila/LibreChat) | [github.com/open-webui/open-webui](https://github.com/open-webui/open-webui) | [docs.openwebui.com](https://docs.openwebui.com) |
-| nvidia-container-toolkit | GPU access for containers | Apache-2.0 | [github.com/NVIDIA/nvidia-container-toolkit](https://github.com/NVIDIA/nvidia-container-toolkit) | [docs](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/) |
-| NVIDIA driver + CUDA | GPU driver/runtime | **proprietary** — the single non-FOSS software component in the platform; unavoidable for CUDA inference on NVIDIA cards (Nouveau has no CUDA) | [nvidia.com/drivers](https://www.nvidia.com/en-us/drivers/) | flagged deliberately |
+| Wyoming Whisper | local speech-to-text (Home Assistant voice) | MIT | [github.com/rhasspy/wyoming-faster-whisper](https://github.com/rhasspy/wyoming-faster-whisper) | [rhasspy](https://github.com/rhasspy) |
+| Wyoming Piper | local text-to-speech | MIT | [github.com/rhasspy/wyoming-piper](https://github.com/rhasspy/wyoming-piper) | [piper samples](https://rhasspy.github.io/piper-samples/) |
+| nvidia-container-toolkit *(only if the 960 is attached)* | GPU access for containers | Apache-2.0 | [github.com/NVIDIA/nvidia-container-toolkit](https://github.com/NVIDIA/nvidia-container-toolkit) | [docs](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/) |
+| NVIDIA driver + CUDA *(optional GPU path only)* | GPU driver/runtime | **proprietary** — the only non-FOSS software component, and now **fully optional**: the default CPU path uses none of it | [nvidia.com/drivers](https://www.nvidia.com/en-us/drivers/) | flagged deliberately |
 
 ## Core services (LXCs 101–106)
 
@@ -54,6 +56,7 @@ AGPL option, but Valkey is the clean community answer.)
 | WireGuard | remote-access VPN | GPL-2.0 (kernel) | [git.zx2c4.com](https://git.zx2c4.com/wireguard-linux/) | [wireguard.com](https://www.wireguard.com) |
 | Uptime Kuma | monitoring + alerting | MIT | [github.com/louislam/uptime-kuma](https://github.com/louislam/uptime-kuma) | [wiki](https://github.com/louislam/uptime-kuma/wiki) |
 | ntfy | self-hosted push notifications | Apache-2.0 / GPL-2.0 | [github.com/binwiederhier/ntfy](https://github.com/binwiederhier/ntfy) | [ntfy.sh](https://ntfy.sh) · [docs](https://docs.ntfy.sh) |
+| Forgejo | self-hosted git + CI | GPL-3.0+ | [codeberg.org/forgejo/forgejo](https://codeberg.org/forgejo/forgejo) | [forgejo.org](https://forgejo.org/docs/) |
 
 ## Media stack (servarr VM, 200)
 
@@ -76,6 +79,8 @@ AGPL option, but Valkey is the clean community answer.)
 | Kavita | ebooks, comics, manga | GPL-3.0 | [github.com/Kareadita/Kavita](https://github.com/Kareadita/Kavita) | [kavitareader.com](https://www.kavitareader.com) · [wiki](https://wiki.kavitareader.com) |
 | LazyLibrarian | books/audiobooks automation (Readarr substitute) | GPL-3.0 | [gitlab.com/LazyLibrarian/LazyLibrarian](https://gitlab.com/LazyLibrarian/LazyLibrarian) | [docs](https://lazylibrarian.gitlab.io) |
 | Kapowarr | comics automation | GPL-3.0 | [github.com/Casvt/Kapowarr](https://github.com/Casvt/Kapowarr) | [docs](https://casvt.github.io/Kapowarr/) |
+| ErsatzTV | live TV channels from the library | Zlib | [github.com/ErsatzTV/ErsatzTV](https://github.com/ErsatzTV/ErsatzTV) | [ersatztv.org](https://ersatztv.org) |
+| RomM | retro-game ROM library manager | AGPL-3.0 | [github.com/rommapp/romm](https://github.com/rommapp/romm) | [docs.romm.app](https://docs.romm.app) |
 | Samba | SMB share of the library | GPL-3.0 | [gitlab.com/samba-team](https://gitlab.com/samba-team/samba) | [samba.org](https://www.samba.org) |
 | LinuxServer.io images | container packaging | GPL-3.0 | [github.com/linuxserver](https://github.com/linuxserver) | [linuxserver.io](https://www.linuxserver.io) · [docs](https://docs.linuxserver.io) |
 
@@ -92,6 +97,17 @@ AGPL option, but Valkey is the clean community answer.)
 | Immich | photo backup + ML search | AGPL-3.0 | [github.com/immich-app/immich](https://github.com/immich-app/immich) | [immich.app](https://immich.app) · [docs](https://immich.app/docs) |
 | SearXNG | private metasearch engine | AGPL-3.0 | [github.com/searxng/searxng](https://github.com/searxng/searxng) | [docs.searxng.org](https://docs.searxng.org) |
 | Taiga | agile project management (kanban/scrum) | AGPL-3.0 (back) / MPL-2.0 (front) | [github.com/taigaio](https://github.com/taigaio) · [taiga-docker](https://github.com/taigaio/taiga-docker) | [taiga.io](https://taiga.io) · [docs](https://docs.taiga.io) |
+| Karakeep | bookmarks / read-it-later, AI tagging | AGPL-3.0 | [github.com/karakeep-app/karakeep](https://github.com/karakeep-app/karakeep) | [karakeep.app](https://karakeep.app) |
+| Meilisearch | search backend (Karakeep) | MIT | [github.com/meilisearch/meilisearch](https://github.com/meilisearch/meilisearch) | [meilisearch.com](https://www.meilisearch.com) |
+| Mealie | recipes + meal planning | AGPL-3.0 | [github.com/mealie-recipes/mealie](https://github.com/mealie-recipes/mealie) | [mealie.io](https://mealie.io) |
+| Grocy | groceries / chores / household ERP | MIT | [github.com/grocy/grocy](https://github.com/grocy/grocy) | [grocy.info](https://grocy.info) |
+| Homebox | home inventory | AGPL-3.0 | [github.com/sysadminsmedia/homebox](https://github.com/sysadminsmedia/homebox) | [homebox.software](https://homebox.software) |
+| FreshRSS | RSS/news reader | AGPL-3.0 | [github.com/FreshRSS/FreshRSS](https://github.com/FreshRSS/FreshRSS) | [freshrss.org](https://freshrss.org) |
+| ArchiveBox | permanent local web archive | MIT | [github.com/ArchiveBox/ArchiveBox](https://github.com/ArchiveBox/ArchiveBox) | [archivebox.io](https://archivebox.io) |
+| BookStack | household wiki | MIT | [github.com/BookStackApp/BookStack](https://github.com/BookStackApp/BookStack) | [bookstackapp.com](https://www.bookstackapp.com) |
+| Conduit | Matrix chat server (federation off) | Apache-2.0 | [gitlab.com/famedly/conduit](https://gitlab.com/famedly/conduit) | [conduit.rs](https://conduit.rs) |
+| Element Web | Matrix client | AGPL-3.0 | [github.com/element-hq/element-web](https://github.com/element-hq/element-web) | [element.io](https://element.io) |
+| MariaDB | database (BookStack, RomM) | GPL-2.0 | [github.com/MariaDB/server](https://github.com/MariaDB/server) | [mariadb.org](https://mariadb.org) |
 | NFS (nfs-kernel-server) | shared Nextcloud state | GPL-2.0 | [git.kernel.org](https://git.kernel.org) | [linux-nfs.org](https://linux-nfs.org) |
 | Vaultwarden *(extra)* | Bitwarden-compatible passwords | AGPL-3.0 | [github.com/dani-garcia/vaultwarden](https://github.com/dani-garcia/vaultwarden) | [wiki](https://github.com/dani-garcia/vaultwarden/wiki) |
 | Syncthing *(extra)* | device file sync | MPL-2.0 | [github.com/syncthing/syncthing](https://github.com/syncthing/syncthing) | [syncthing.net](https://syncthing.net) · [docs](https://docs.syncthing.net) |
@@ -124,15 +140,13 @@ Capacity reality check before adding from this list: ~57 GB of HA-protected
 RAM against ~80 GB two-survivor headroom means roughly **15–20 GB of
 comfortable HA budget left** (pinned/experimental guests can go beyond —
 they don't need absorbing). cloud-data (8 GB) comfortably takes 2–3 more
-small web apps; the AI VM's P40 has VRAM to spare for sidecars.
+small web apps; heavier/ML tools want a dedicated GPU the cluster
+doesn't have (the 4 GB GTX 960 is too small for image gen).
 
 | Software | What | License | Links | Why not yet |
 |----------|------|---------|-------|-------------|
 | Frigate | NVR / camera AI | MIT | [github](https://github.com/blakeblackshear/frigate) · [frigate.video](https://frigate.video) | needs cameras + ideally a Coral/iGPU |
 | Navidrome | music streaming (Subsonic API) | GPL-3.0 | [github](https://github.com/navidrome/navidrome) · [navidrome.org](https://www.navidrome.org) | Jellyfin already serves music; add if you want Subsonic apps |
-| FreshRSS | RSS reader | AGPL-3.0 | [github](https://github.com/FreshRSS/FreshRSS) · [freshrss.org](https://freshrss.org) | trivial add to cloud-data compose when wanted |
-| Mealie | recipes + meal planning | AGPL-3.0 | [github](https://github.com/mealie-recipes/mealie) · [mealie.io](https://mealie.io) | same |
-| Wallabag | read-it-later | MIT | [github](https://github.com/wallabag/wallabag) · [wallabag.org](https://wallabag.org) | same |
 | Grafana + Prometheus | deep metrics/dashboards | AGPL-3.0 / Apache-2.0 | [grafana](https://github.com/grafana/grafana) · [prometheus](https://github.com/prometheus/prometheus) | Proxmox graphs + Kuma cover the need; add for fun |
 | Headscale | self-hosted Tailscale control plane | BSD-3 | [github](https://github.com/juanfont/headscale) | WireGuard covers remote access; relevant if CGNAT ever forces Tailscale-style NAT traversal |
 | CrowdSec | collaborative IPS | MIT | [github](https://github.com/crowdsecurity/crowdsec) · [crowdsec.net](https://www.crowdsec.net) | overkill with one exposed UDP port; add if you ever publish services |
@@ -140,18 +154,12 @@ small web apps; the AI VM's P40 has VRAM to spare for sidecars.
 | LibreNMS | SNMP network monitoring | GPL-3.0 | [github](https://github.com/librenms/librenms) · [librenms.org](https://www.librenms.org) | valuable once a managed switch exists |
 | Pi-hole | AdGuard alternative | EUPL-1.2 | [github](https://github.com/pi-hole/pi-hole) · [pi-hole.net](https://pi-hole.net) | AdGuard Home chosen (single binary, DoH out of the box) |
 | Suwayomi | manga downloader/server (pairs with Kavita) | MPL-2.0 | [github](https://github.com/Suwayomi/Suwayomi-Server) | add to the servarr compose if manga sources beyond Kapowarr are wanted |
-| Forgejo | self-hosted git (host THIS repo at home) + actions CI | GPL-3.0+ | [codeberg.org/forgejo](https://codeberg.org/forgejo/forgejo) · [forgejo.org](https://forgejo.org) | single binary — perfect new LXC, `provision-*.sh` pattern |
-| BookStack | household wiki/documentation | MIT | [github](https://github.com/BookStackApp/BookStack) · [bookstackapp.com](https://www.bookstackapp.com) | cloud-data compose (shares Postgres? no — MySQL; brings its own) |
-| Karakeep | bookmarks/read-it-later with AI tagging | AGPL-3.0 | [github](https://github.com/karakeep-app/karakeep) · [karakeep.app](https://karakeep.app) | cloud-data; can point its AI features at the Ollama endpoint |
-| Grocy | groceries/chores/household ERP | MIT | [github](https://github.com/grocy/grocy) · [grocy.info](https://grocy.info) | cloud-data compose |
-| Homebox | home inventory (what's in which box, warranties) | AGPL-3.0 | [github](https://github.com/sysadminsmedia/homebox) | cloud-data compose, tiny |
-| ArchiveBox | permanent local archive of web pages | MIT | [github](https://github.com/ArchiveBox/ArchiveBox) · [archivebox.io](https://archivebox.io) | cloud-data compose |
-| ErsatzTV | build live "TV channels" from the Jellyfin library | Zlib | [github](https://github.com/ErsatzTV/ErsatzTV) · [ersatztv.org](https://ersatztv.org) | servarr VM compose — pure fun |
-| RomM | retro-game ROM library manager | AGPL-3.0 | [github](https://github.com/rommapp/romm) | servarr VM; pairs with the GTX 960 desktop VM |
-| ComfyUI | Stable Diffusion image generation (P40 runs SDXL) | GPL-3.0 | [github](https://github.com/comfyanonymous/ComfyUI) | **AI VM** — second compose next to Ollama |
-| Whisper + Piper (Wyoming) | local speech-to-text + TTS → Home Assistant voice assistant | MIT / MIT | [faster-whisper](https://github.com/SYSTRAN/faster-whisper) · [piper](https://github.com/OHF-Voice/piper1-gpl) · [wyoming](https://github.com/rhasspy/wyoming) | **AI VM** sidecars; makes HAOS a fully local voice assistant |
-| Conduit / Element | Matrix server + client (family chat) | Apache-2.0 / AGPL-3.0 | [conduit](https://gitlab.com/famedly/conduit) · [element](https://github.com/element-hq/element-web) | own small VM/LXC; only worth it if family actually adopts it |
+| ComfyUI | Stable Diffusion image generation | GPL-3.0 | [github](https://github.com/comfyanonymous/ComfyUI) | needs a real GPU (the 4 GB 960 is too small for SDXL); revisit with a bigger card |
 | Crafty Controller | Minecraft server manager | GPL-3.0 (⚠ the game server itself is proprietary Mojang software) | [gitlab](https://gitlab.com/crafty-controller/crafty-4) · [craftycontrol.com](https://craftycontrol.com) | own VM, easy to make a desktop-factory sibling |
+
+**Deliberately skipped as redundant** (already covered by something
+installed): Wallabag → Karakeep does read-it-later; Navidrome →
+Jellyfin serves music; Suwayomi → Kapowarr + Kavita cover comics/manga.
 
 Placement rule of thumb when adding from this list: web app with a
 database → cloud-data compose; heavy/ML → its own VM; single Go/Rust

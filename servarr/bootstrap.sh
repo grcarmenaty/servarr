@@ -59,7 +59,7 @@ log "data disk mounted at ${DATA_MOUNT} ($(df -h --output=size "$DATA_MOUNT" | t
 
 # ── 3. Directory tree (TRaSH-guides layout) ──────────────────────────────
 log "Creating directory tree"
-mkdir -p "$DATA_MOUNT"/media/{movies,tv,music,audiobooks,podcasts,books,comics} \
+mkdir -p "$DATA_MOUNT"/media/{movies,tv,music,audiobooks,podcasts,books,comics,roms} \
          "$DATA_MOUNT"/torrents/{movies,tv,music,audiobooks,books,comics} \
          "$CONFIG_ROOT"
 chown -R "$MEDIA_USER:$MEDIA_USER" "$DATA_MOUNT" "$CONFIG_ROOT"
@@ -67,8 +67,15 @@ chown -R "$MEDIA_USER:$MEDIA_USER" "$DATA_MOUNT" "$CONFIG_ROOT"
 # ── 4. Environment file ──────────────────────────────────────────────────
 if [[ ! -f .env ]]; then
     cp .env.example .env
-    sed -i "s|^PUID=.*|PUID=$(id -u "$MEDIA_USER")|; s|^PGID=.*|PGID=$(id -g "$MEDIA_USER")|" .env
+    rand() { tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "$1"; }
+    sed -i \
+        -e "s|^PUID=.*|PUID=$(id -u "$MEDIA_USER")|" \
+        -e "s|^PGID=.*|PGID=$(id -g "$MEDIA_USER")|" \
+        -e "s|^ROMM_DB_PASSWORD=.*|ROMM_DB_PASSWORD=$(rand 32)|" \
+        -e "s|^ROMM_AUTH_SECRET_KEY=.*|ROMM_AUTH_SECRET_KEY=$(rand 48)|" \
+        .env
     chown "$MEDIA_USER:$MEDIA_USER" .env
+    chmod 600 .env
     log "created .env — review it (timezone, VPN settings)"
 else
     log ".env already exists — leaving it alone"

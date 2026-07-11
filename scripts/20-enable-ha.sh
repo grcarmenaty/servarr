@@ -37,8 +37,13 @@ for i in "${!CLOUD_APP_VMIDS[@]}"; do
 done
 enroll "vm:${PHOTOS_VMID}" "${PHOTOS_NAME}"
 enroll "vm:${WAZUH_VMID}" "${WAZUH_NAME}"
-# NOT enrolled on purpose: the AI VM (${AI_VMID}) and any GPU/desktop VMs —
-# PCI passthrough pins them to one node; HA can't move them (docs/16).
+# AI VM: HA only while it has no GPU attached (passthrough pins a VM)
+if qm config "${AI_VMID}" 2>/dev/null | grep -q '^hostpci'; then
+    log "${AI_NAME}: GPU passthrough detected — node-pinned, skipping HA (docs/16)"
+else
+    enroll "vm:${AI_VMID}" "${AI_NAME}"
+fi
+# NOT enrolled on purpose: desktop/GPU VMs from scripts/30 (docs/15).
 
 # ── anti-affinity: redundant pairs must not share a node ──────────────────
 # PVE 9 HA resource-affinity rules; falls back to a GUI hint on older CLIs.

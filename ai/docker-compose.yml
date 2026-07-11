@@ -1,10 +1,18 @@
-# AI assistant stack — Ollama (inference) + Open WebUI (authenticated chat
-# UI + OpenAI-compatible API). Runs in the GPU-passthrough VM (docs/16).
+# AI stack — Ollama (LLM inference) + Open WebUI (authenticated chat UI +
+# OpenAI-compatible API) + Whisper/Piper (local voice for Home Assistant).
+# Runs on CPU by default (docs/16); the VM stays migratable + HA.
+#
+#   docker compose up -d
+#   # only if the GTX 960 is passed through to this VM (docs/16 appendix):
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
 #
 # Security model:
 #   - Ollama's native port 11434 has NO auth → published on 127.0.0.1 only.
 #   - All LAN/VPN access goes through Open WebUI (:3000 → chat.home.lan),
 #     which requires login; its /api endpoint requires per-user API keys.
+#   - Whisper/Piper (Wyoming protocol, :10300/:10301) are LAN-published for
+#     Home Assistant; they hold no data and take no commands beyond
+#     transcribe/speak.
 
 services:
   ollama:
@@ -17,13 +25,6 @@ services:
       - /mnt/models/ollama:/root/.ollama
     environment:
       OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -36,10 +37,31 @@ services:
       WEBUI_URL: ${WEBUI_URL:-http://chat.home.lan}
       # First run: leave signups on, create YOUR account (first user =
       # admin), then set ENABLE_SIGNUP=false in .env and `docker compose
-      # up -d` again. New users are then admin-created only.
+      # up -d` again.
       ENABLE_SIGNUP: ${ENABLE_SIGNUP:-true}
       DEFAULT_USER_ROLE: pending
     ports:
       - "3000:8080"
     volumes:
       - /opt/ai/config/open-webui:/app/backend/data
+
+  # ── local voice for Home Assistant (Wyoming protocol — docs/16) ────────
+  whisper: # speech-to-text
+    image: rhasspy/wyoming-whisper:latest
+    container_name: whisper
+    restart: unless-stopped
+    command: --model ${WHISPER_MODEL:-small-int8} --language ${WHISPER_LANGUAGE:-es}
+    ports:
+      - "10300:10300"
+    volumes:
+      - /mnt/models/whisper:/data
+
+  piper: # text-to-speech
+    image: rhasspy/wyoming-piper:latest
+    container_name: piper
+    restart: unless-stopped
+    command: --voice ${PIPER_VOICE:-es_ES-davefx-medium}
+    ports:
+      - "10301:10301"
+    volumes:
+      - /mnt/models/piper:/data

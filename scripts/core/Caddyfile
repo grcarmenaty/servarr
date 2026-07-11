@@ -53,6 +53,11 @@ http://chat.@DOMAIN@ {
 	reverse_proxy @AI_IP@:3000
 }
 
+# Forgejo — self-hosted git (docs/09)
+http://git.@DOMAIN@ {
+	reverse_proxy @FORGEJO_IP@:3000
+}
+
 # ── media stack (servarr VM) ───────────────────────────────────────────────
 http://jellyfin.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:8096
@@ -88,6 +93,14 @@ http://torrents.@DOMAIN@ {
 
 http://audiobooks.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:13378
+}
+
+http://tv.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:8409
+}
+
+http://games.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:8095
 }
 
 http://books.@DOMAIN@ {
@@ -133,6 +146,42 @@ http://search.@DOMAIN@ {
 
 http://taiga.@DOMAIN@ {
 	reverse_proxy @CLOUDDATA_IP@:9000
+}
+
+http://bookmarks.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8086
+}
+
+http://grocy.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8087
+}
+
+http://recipes.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8088
+}
+
+http://inventory.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:7745
+}
+
+http://rss.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8089
+}
+
+http://archive.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8090
+}
+
+http://wiki.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8091
+}
+
+http://matrix.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8092
+}
+
+http://element.@DOMAIN@ {
+	reverse_proxy @CLOUDDATA_IP@:8093
 }
 
 http://photos.@DOMAIN@ {

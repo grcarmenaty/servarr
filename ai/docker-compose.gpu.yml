@@ -1,0 +1,18 @@
+# GPU overlay — ONLY when the GTX 960 is passed through to this VM
+# (docs/16 appendix; requires the NVIDIA driver + container toolkit, which
+# bootstrap.sh installs automatically when it detects the card).
+#
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+#
+# 4 GB VRAM = full offload for ~3B models, partial offload for bigger ones;
+# Ollama splits between GPU and CPU automatically.
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

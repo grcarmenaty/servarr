@@ -1,207 +1,140 @@
-# 16 — Self-Hosted AI Assistant (GPU tier)
+# 16 — Self-Hosted AI Assistant + Local Voice
 
-An authenticated chat assistant at `http://chat.home.lan`, plus an
-authenticated **OpenAI-compatible API endpoint** for scripts and apps —
-all inference local, nothing leaves the house.
+An authenticated chat assistant at `http://chat.home.lan`, an
+authenticated **OpenAI-compatible API endpoint** for scripts and apps,
+and **local speech-to-text + text-to-speech** for a fully offline Home
+Assistant voice assistant — all inference on your own hardware, nothing
+leaves the house.
 
-Stack: [Ollama](https://ollama.com) (MIT) serving models on the GPU,
-fronted by [Open WebUI](https://github.com/open-webui/open-webui)
-(multi-user auth, RBAC, API keys). Runs in a dedicated VM with the GPU
-passed through.
+Stack (all in one VM):
 
-## The two GPUs, honestly
+- [Ollama](https://ollama.com) (MIT) — LLM inference
+- [Open WebUI](https://github.com/open-webui/open-webui) — auth, RBAC,
+  API keys, the chat UI
+- [Whisper](https://github.com/rhasspy/wyoming-faster-whisper) +
+  [Piper](https://github.com/rhasspy/wyoming-piper) — voice, spoken to
+  Home Assistant over the Wyoming protocol
 
-| Card | VRAM | Reality |
-|------|------|---------|
-| **Tesla P40** (Pascal) | 24 GB | *The* budget homelab LLM card — runs 14B models comfortably, 30B-class quantized. This is the assistant's GPU. |
-| **GTX 960** (Maxwell — there is no "RTX 960") | 2–4 GB | Not an LLM card. Good second lives: NVENC transcoding or a desktop VM (see bottom). |
+## CPU-first by design (no dedicated GPU needed)
 
-**P40 physical checklist** (server card — read before buying/installing):
+This runs on **CPU** by default, and that's the recommended shape:
 
-- **No fan.** It expects server chassis airflow — in a desktop case you
-  must strap a blower/fan shroud to it (3D-printed + 40–75mm fan is the
-  standard mod) or it will thermal-throttle and die early.
-- **Power: 8-pin EPS (CPU-style) connector, NOT PCIe 8-pin.** Adapters
-  exist; miswiring this kills cards. 250 W draw — check the PSU.
-- **BIOS on that node**: enable *Above 4G Decoding* (and *Resizable
-  BAR* if offered) or the card won't initialize.
-- **No display output** — it's compute-only, which is fine here.
+- The VM is a **normal migratable, HA-enrolled guest** like everything
+  else — a node dies, it restarts on a survivor. No passthrough, no
+  node pinning, no "run this only on the GPU node" caveats.
+- A Ryzen-class node runs 7–8B models at a usable **~5–10 tokens/sec** —
+  fine for a household assistant, drafting, summarizing, and Home
+  Assistant voice. It's about capability, not raw speed.
+- 12 GB RAM / 12 vCPU (`cluster.env`) is the starting allocation; bump
+  `AI_MEMORY_MB` if you run bigger models.
 
-**Software honesty**: Pascal (P40) and Maxwell (960) are end-of-line —
-NVIDIA's 580 driver branch is their last, and CUDA 12 the last CUDA.
-Everything here works today on Debian 13's packaged driver, and Ollama
-still ships Pascal support; expect to pin versions rather than chase
-latest, and treat a future used-3090 upgrade (24 GB, modern) as the
-eventual successor. Also honest: the NVIDIA driver + CUDA are the one
-**proprietary** software component in the whole platform (docs/12) —
-Nouveau can't do CUDA, so there is no FOSS path to GPU inference on
-NVIDIA hardware.
-
-## Architecture & security model
-
-```
- chat.home.lan (Caddy) ──► Open WebUI :3000   ← login required (bcrypt local accounts)
-                              │  /api/*        ← per-user API keys (Bearer)
-                              ▼
-                           Ollama :11434       ← NO auth → bound to 127.0.0.1 ONLY
-                              ▼
-                           Tesla P40 (passthrough)
-```
-
-- The VM is **pinned to the GPU node** (PCI passthrough blocks
-  migration) → deliberately **not HA-enrolled**. Node dies = assistant
-  down until the node returns. Every other service keeps its HA story.
-- Remote use: through WireGuard, like everything else. The endpoint is
-  never port-forwarded.
+| Item | Value |
+|------|-------|
+| VM | `ai` (207), 10.0.0.27, 12 vCPU / 12 GB — **HA-enrolled** |
+| Chat | `http://chat.home.lan` (authenticated) |
+| API | `http://chat.home.lan/api` (per-user keys) |
+| Voice | Whisper `:10300`, Piper `:10301` (Wyoming, for Home Assistant) |
+| Models | 300 G thin disk, backup-excluded (re-downloadable) |
 
 ## Deploy
 
-⚠ **Location matters in this doc more than anywhere else in the repo.**
-Unlike every other VM (creatable from any node), the GPU steps are tied
-to one physical machine. First, declare which node holds the P40 in
-`scripts/cluster.env`:
-
 ```bash
-# on each node, find the card:
-lspci -nn | grep -i nvidia
-# then in scripts/cluster.env:
-GPU_NODE="node3"        # ← the node where the P40 actually sits
-```
+# on ANY node (no GPU, so no special placement):
+bash /root/scripts/16-create-ai-vm.sh
 
-Where each step runs — the scripts also enforce this (16 refuses on the
-wrong node; 26 asks):
-
-| Step | Runs on | Why there |
-|------|---------|-----------|
-| 1. BIOS: Above 4G Decoding | **GPU node** (physical console) | board setting of the machine holding the card |
-| 2. `26-prepare-gpu-passthrough.sh` + reboot | **GPU node only** | binds *that node's* PCI device to vfio-pci |
-| 3. `16-create-ai-vm.sh` | **GPU node only** | `hostpci` passthrough only works where the device is |
-| 4. `ai/bootstrap.sh` (×2) + `docker compose` | **inside the AI VM** (10.0.0.27) | guest-side driver + stack |
-| 5. Account setup | any browser | it's just the web UI |
-
-Everything below repeats these locations inline.
-
-### 1. Host prep — ⚠ GPU node only, once
-
-On the **GPU node's** BIOS: *Above 4G Decoding* on. Then, SSH **to the
-GPU node** (`ssh root@<GPU node>` — not node1 unless the card is there):
-
-```bash
-lspci -nn | grep -i nvidia                      # note the address, e.g. 01:00.0
-bash /root/scripts/26-prepare-gpu-passthrough.sh 01:00
-# migrate guests off THIS node (docs/06), reboot THIS node, then verify:
-lspci -nnks 01:00                               # Kernel driver in use: vfio-pci
-```
-
-The reboot is of the **GPU node** — HA moves its guests to the other
-two meanwhile.
-
-### 2. Create the VM — ⚠ GPU node only
-
-Still on the **GPU node** (the script exits with an error on any other
-node):
-
-```bash
-bash /root/scripts/16-create-ai-vm.sh 01:00
-```
-
-(q35 + OVMF + the GPU as `hostpci0`, ballooning off, 300 G model disk
-excluded from backups — models re-download.)
-
-### 3. Bootstrap — inside the AI VM (two passes; driver needs a reboot)
-
-These run **in the VM** (10.0.0.27), not on any node — the `ssh` target
-changes here:
-
-```bash
+# then:
 scp -r ai cloud@10.0.0.27:~ && ssh cloud@10.0.0.27
-cd ai && sudo bash bootstrap.sh      # pass 1: NVIDIA driver → sudo reboot
-ssh cloud@10.0.0.27                  # (only the VM reboots, not the node)
-cd ai && sudo bash bootstrap.sh      # pass 2: disk, docker, GPU runtime
-# re-login, then:
+cd ai && sudo bash bootstrap.sh        # CPU path: single pass
+# re-login for the docker group, then:
 docker compose up -d
-docker exec ollama ollama pull qwen3:14b
+docker exec ollama ollama pull qwen3:8b
 ```
 
-`nvidia-smi` inside the VM must show the P40 before pass 2 proceeds.
+### Authentication setup (the important 5 minutes)
 
-### 4. Authentication setup (the important 5 minutes)
+1. `http://chat.home.lan` → **Sign up** — the **first account created
+   becomes admin**. Do it immediately after `up -d`.
+2. `.env`: `ENABLE_SIGNUP=false` → `docker compose up -d`. Now only you
+   create users (*Admin Panel → Users*).
+3. Family members: role *user* — chat, not settings.
 
-1. Open `http://chat.home.lan` → **Sign up** — the **first account
-   created becomes the admin**. Do this immediately after `up -d`.
-2. Edit `.env`: `ENABLE_SIGNUP=false` → `docker compose up -d`.
-   From now on only you can create users (*Admin Panel → Users*); any
-   stray signup attempt lands as "pending" anyway.
-3. Family members: create their accounts as role *user* — they get
-   chat, not settings.
+### Using the API
 
-## Using the endpoint
-
-**Chat**: `http://chat.home.lan` — model picker top-left, chat
-histories per user, file upload/RAG built in.
-
-**API** (OpenAI-compatible, authenticated): each user generates a key
-under *Settings → Account → API keys*. Then from anywhere on
-LAN/WireGuard:
+Each user makes a key under *Settings → Account → API keys*, then:
 
 ```bash
 curl http://chat.home.lan/api/chat/completions \
   -H "Authorization: Bearer sk-..." \
   -H "Content-Type: application/json" \
-  -d '{"model": "qwen3:14b", "messages": [{"role": "user", "content": "hello"}]}'
+  -d '{"model":"qwen3:8b","messages":[{"role":"user","content":"hello"}]}'
 ```
 
-Anything that speaks the OpenAI API (scripts, Home Assistant's
-conversation integration, IDE plugins) points at
-`http://chat.home.lan/api` with that key. The raw Ollama port never
-leaves the VM's loopback.
+Anything OpenAI-compatible (scripts, IDE plugins, Karakeep's AI tagging
+in docs/10, Home Assistant's conversation agent) points at
+`http://chat.home.lan/api` with that key. Ollama's raw authless port
+never leaves the VM's loopback.
 
-## Model menu for a P40 (24 GB)
+## Local voice for Home Assistant
 
-| Model (`ollama pull …`) | Fits | Good at |
-|------------------------|------|---------|
-| `qwen3:14b` | comfortably | the default daily driver |
-| `llama3.1:8b` | easily, fast | quick tasks, drafts |
-| `gemma3:12b` | comfortably | writing, multilingual |
-| `qwen3:32b` (Q4) | tight but works | harder reasoning, slower |
-| `nomic-embed-text` | trivial | embeddings for RAG |
+Whisper (speech→text) and Piper (text→speech) come up with the stack,
+speaking the **Wyoming protocol** on `:10300`/`:10301`. In Home
+Assistant (docs/09): *Settings → Devices → Add Integration → Wyoming*,
+add `10.0.0.27:10300` (Whisper) and `10.0.0.27:10301` (Piper). Build a
+voice assistant under *Settings → Voice assistants* using them plus the
+Ollama conversation agent — a **fully local "Hey Jarvis"** with no
+cloud, no Google, no Alexa. Language/voice are set in `.env`
+(`WHISPER_LANGUAGE`, `PIPER_VOICE` — [voice samples](https://rhasspy.github.io/piper-samples/)).
 
-Rule of thumb: parameter-count × ~0.6 GB (Q4 quant) + a few GB for
-context must fit in 24 GB. Expect ~10–20 tok/s on 14B — P40s are
-about capacity, not speed.
+## Model menu (CPU)
 
-## The GTX 960's second life
+| `ollama pull …` | Speed on CPU | Good for |
+|-----------------|--------------|----------|
+| `llama3.2:3b` | fast (~15 tok/s) | voice assistant, quick tasks |
+| `qwen3:8b` | usable (~5–10 tok/s) | the daily driver |
+| `gemma3:12b` | slower | writing, multilingual, when quality matters |
+| `nomic-embed-text` | instant | embeddings / RAG |
 
-It's in a *different* node, so it can't help the AI VM. Two options:
+Bigger than ~14B on CPU gets impractical; that's the ceiling this VM
+targets. RAM budget: a model needs roughly its file size resident, so
+keep `AI_MEMORY_MB` comfortably above your largest model.
 
-- **Desktop/experiment VM** (recommended): run
-  `26-prepare-gpu-passthrough.sh` **on the 960's own node** (the script
-  will notice it isn't `GPU_NODE` and ask — answering yes is correct
-  here), then attach the card to a desktop VM created **on that same
-  node** (`qm set <vmid> --hostpci0 0000:XX:00,pcie=1`,
-  `--machine q35 --bios ovmf` at creation). Light CUDA, retro gaming,
-  a second tiny Ollama (3B models) — its VM is pinned like the AI VM.
-- **Jellyfin NVENC**: pass it to the servarr VM instead for hardware
-  transcoding. Works (Maxwell NVENC does H.264 + 8-bit HEVC), **but**
-  it pins the media VM to that node and removes its HA — docs/08
-  already argues direct play makes transcoding rarely matter, so only
-  do this if transcoding is actually a daily pain.
+## Appendix — optional GTX 960 acceleration
 
-## Give the assistant web search (SearXNG)
+The GTX 960 (4 GB) on `GPU_NODE` can accelerate **small** models
+(≤3–4B fully on-GPU; Ollama splits bigger ones GPU+CPU). It's optional
+and comes with a real trade-off: **passthrough pins the VM to that node
+and removes its HA.** Only worth it if snappier small-model responses
+matter more than failover for this one service.
 
-Once SearXNG is up (docs/10): Open WebUI *Admin Panel → Settings → Web
-Search* → engine `searxng`, query URL
-`http://10.0.0.22:8083/search?q=<query>&format=json`. (Enable the JSON
-format in SearXNG's `settings.yml` first — docs/10 §SearXNG.) Chats can
-then toggle live web search, with the searching done anonymously by
-your own metasearch instance.
+⚠ These steps are **GPU-node-only** (the node physically holding the
+960 — set `GPU_NODE` in `cluster.env`; the scripts enforce it):
+
+```bash
+# on GPU_NODE:
+lspci -nn | grep -i nvidia                       # e.g. 01:00.0
+bash /root/scripts/26-prepare-gpu-passthrough.sh 01:00
+# migrate its guests off, reboot GPU_NODE, verify vfio-pci, then:
+bash /root/scripts/16-create-ai-vm.sh --gpu 01:00
+```
+
+Then bootstrap becomes two-pass (driver install → VM reboot → rerun),
+and start with the GPU overlay:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+```
+
+`20-enable-ha.sh` detects the attached GPU and automatically skips
+HA-enrolling this VM. Software honesty: Maxwell (960) is on NVIDIA's
+final 580 driver branch / CUDA 12, and the NVIDIA driver is the one
+proprietary component in the platform (docs/12) — Nouveau has no CUDA.
+Given 4 GB VRAM, the CPU-only default is genuinely the better call for
+most people; this appendix is here only because the card exists.
 
 ## Day-2
 
-- Update: `docker compose pull && docker compose up -d` (models are
-  unaffected). New models: `docker exec ollama ollama pull <name>`;
-  prune old ones with `ollama rm`.
-- VRAM/load check: `nvidia-smi` in the VM; loaded models:
-  `docker exec ollama ollama ps`.
-- The 300 G model disk grows like every other: `qm disk resize 207
-  scsi1 +100G` + `xfs_growfs /mnt/models`.
+- Update: `docker compose pull && docker compose up -d` (models
+  unaffected). New models `ollama pull`, remove with `ollama rm`.
+- Loaded models: `docker exec ollama ollama ps`.
+- Model disk grows like any other: `qm disk resize 207 scsi1 +100G` +
+  `xfs_growfs /mnt/models`.

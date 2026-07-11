@@ -85,6 +85,11 @@ if [[ ! -f .env ]]; then
         -e "s|^PAPERLESS_ADMIN_PASSWORD=.*|PAPERLESS_ADMIN_PASSWORD=$(rand 20)|" \
         -e "s|^SEARXNG_SECRET=.*|SEARXNG_SECRET=$(rand 48)|" \
         -e "s|^GUACAMOLE_DB_PASSWORD=.*|GUACAMOLE_DB_PASSWORD=$(rand 32)|" \
+        -e "s|^MEILI_MASTER_KEY=.*|MEILI_MASTER_KEY=$(rand 32)|" \
+        -e "s|^KARAKEEP_NEXTAUTH_SECRET=.*|KARAKEEP_NEXTAUTH_SECRET=$(rand 48)|" \
+        -e "s|^BOOKSTACK_APP_KEY=.*|BOOKSTACK_APP_KEY=base64:$(openssl rand -base64 32)|" \
+        -e "s|^BOOKSTACK_DB_PASSWORD=.*|BOOKSTACK_DB_PASSWORD=$(rand 32)|" \
+        -e "s|^MATRIX_REGISTRATION_TOKEN=.*|MATRIX_REGISTRATION_TOKEN=$(rand 24)|" \
         .env
     chown "$LOGIN_USER:$LOGIN_USER" .env
     chmod 600 .env
@@ -97,6 +102,24 @@ mkdir -p "${CONFIG_ROOT}/firefly-importer/keys" "${CONFIG_ROOT}/firefly-importer
 # Paperless-ngx storage (runs as uid 1000 inside its container)
 mkdir -p "$DATA_MOUNT"/paperless/{media,export,consume}
 chown -R 1000:1000 "$DATA_MOUNT/paperless"
+
+# Element web client config (points the client at our Conduit server)
+mkdir -p "${CONFIG_ROOT}/element"
+if [[ ! -f "${CONFIG_ROOT}/element/config.json" ]]; then
+    cat > "${CONFIG_ROOT}/element/config.json" <<'EOF'
+{
+    "default_server_config": {
+        "m.homeserver": {
+            "base_url": "http://matrix.home.lan",
+            "server_name": "matrix.home.lan"
+        }
+    },
+    "brand": "Home chat",
+    "disable_guests": true,
+    "disable_3pid_login": true
+}
+EOF
+fi
 cat > /etc/cron.d/firefly-autoimport <<EOF
 # Daily bank sync: runs every saved import config in the importer's /import
 # dir (no-op until you save some — docs/10 "Connecting your banks")

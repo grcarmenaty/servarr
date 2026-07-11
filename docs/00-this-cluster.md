@@ -12,7 +12,7 @@ parameters and checkpoints — is **`RUNBOOK.md`** at the repo root.
 | RAM | 64 GB | Comfortable — default Ceph memory tuning, no compromises |
 | NICs | 2× 10 GbE + 1× 1 GbE | 1 GbE → LAN/internet; 2× 10 GbE → **full-mesh Ceph network** (no 10G switch needed) |
 | Disks | 2× 3 TB + 4× 1 TB | 1× 1 TB = OS disk, remaining 5 = OSDs |
-| GPUs (2 nodes) | GTX 960 (one node) · Tesla P40 planned (another) | P40 → AI assistant VM (`docs/16`); 960 → desktop VM or NVENC. GPU VMs are node-pinned (no HA) |
+| GPU (1 node) | GTX 960 on `GPU_NODE` | optional: accelerate small AI models or a desktop VM (`docs/16`, `docs/15`) — passthrough pins that VM (no HA). The AI assistant runs on **CPU by default** and stays HA |
 
 ## Disk layout (per node)
 
