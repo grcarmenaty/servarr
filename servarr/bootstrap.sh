@@ -61,6 +61,7 @@ log "data disk mounted at ${DATA_MOUNT} ($(df -h --output=size "$DATA_MOUNT" | t
 log "Creating directory tree"
 mkdir -p "$DATA_MOUNT"/media/{movies,tv,music,audiobooks,podcasts,books,comics,roms} \
          "$DATA_MOUNT"/torrents/{movies,tv,music,audiobooks,books,comics} \
+         "$DATA_MOUNT"/usenet/{movies,tv,music,books} \
          "$CONFIG_ROOT"
 chown -R "$MEDIA_USER:$MEDIA_USER" "$DATA_MOUNT" "$CONFIG_ROOT"
 

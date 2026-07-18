@@ -21,7 +21,8 @@ HA-protected like anything else.
 | Bazarr | 6767 | subtitles for what Sonarr/Radarr import |
 | LazyLibrarian | 5299 | books/audiobooks/magazines automation — the Readarr substitute |
 | Kapowarr | 5656 | comics automation — monitors series, fetches issues for Kavita |
-| qBittorrent | 8080 | download client — the image runs **qbittorrent-nox** (headless daemon; the web UI is its only interface) |
+| qBittorrent | 8080 | torrent download client — **qbittorrent-nox** (headless; the web UI is its only interface) |
+| NZBGet | 6789 | Usenet download client (NZB) — complements qBittorrent |
 | FlareSolverr | 8191 | solves Cloudflare challenges for Prowlarr |
 | Gluetun (optional) | — | VPN tunnel + kill switch in front of qBittorrent |
 
@@ -44,8 +45,13 @@ continues:
 ```
 /mnt/data
 ├── torrents/{movies,tv,music,audiobooks}       ← qBittorrent writes here
+├── usenet/{movies,tv,music,books}              ← NZBGet writes here
 └── media/{movies,tv,music,audiobooks,podcasts} ← libraries live here
 ```
+
+Both download clients live under the same `/data` filesystem as the
+libraries, so a finished download — torrent **or** Usenet — hardlinks
+into the library instantly regardless of which client fetched it.
 
 Why an RBD data disk instead of CephFS? The VM sits on the LAN and can't
 reach the Ceph mesh (10.10.10.x), so it can't mount CephFS directly —
@@ -98,31 +104,38 @@ Work through `http://10.0.0.20:<port>` for each service:
    Web UI*). Set *Default Save Path* to `/data/torrents`, and
    per-category paths: `movies` → `/data/torrents/movies`, `tv` →
    `/data/torrents/tv`, `music` → `/data/torrents/music`.
-2. **Prowlarr** (9696) — set auth; add your indexers. Under *Settings →
-   Indexers* add FlareSolverr: `http://flaresolverr:8191` (tag indexers
-   that need it).
-3. **Sonarr** (8989) — *Settings → Media Management*: add root folder
-   `/data/media/tv`. *Download Clients*: qBittorrent, host `qbittorrent`
-   (⚠ host `gluetun` if you use the VPN overlay), port 8080, category
-   `tv`. Confirm *Settings → Importing → Use Hardlinks* is on (default).
-4. **Radarr** (7878) — same, with root folder `/data/media/movies` and
-   category `movies`.
-5. **Lidarr** (8686) — same, with root folder `/data/media/music` and
+2. **qBittorrent alternative — NZBGet** (6789) — *only if you use
+   Usenet* (see the box below). Default login `nzbget`/`tegbzn6789` →
+   change it. *Settings → Paths → MainDir* = `/data/usenet`. Add your
+   Usenet **provider** under *News-Servers* (host/port/user/pass from
+   your subscription). Indexers come from Prowlarr, next.
+3. **Prowlarr** (9696) — set auth; add your indexers (torrent **and/or**
+   Usenet — Prowlarr syncs both). Under *Settings → Indexers* add
+   FlareSolverr: `http://flaresolverr:8191` (tag indexers that need it).
+4. **Sonarr** (8989) — *Settings → Media Management*: add root folder
+   `/data/media/tv`. *Download Clients*: add qBittorrent (host
+   `qbittorrent`, ⚠ `gluetun` with the VPN overlay, port 8080, category
+   `tv`) **and/or** NZBGet (host `nzbget`, port 6789, category `tv`).
+   Sonarr uses whichever has the release; Usenet is preferred when both
+   do. Confirm *Settings → Importing → Use Hardlinks* is on (default).
+5. **Radarr** (7878) — same, with root folder `/data/media/movies` and
+   category `movies` (on both download clients you added).
+6. **Lidarr** (8686) — same, with root folder `/data/media/music` and
    category `music`.
-6. Back in **Prowlarr** — *Settings → Apps*: add Sonarr
+7. Back in **Prowlarr** — *Settings → Apps*: add Sonarr
    (`http://sonarr:8989` + its API key from *Settings → General*),
    Radarr (`http://radarr:7878`), and Lidarr (`http://lidarr:8686`).
    Prowlarr now pushes all indexers to all three.
-7. **Bazarr** (6767) — connect Sonarr and Radarr (same URLs/API keys),
+8. **Bazarr** (6767) — connect Sonarr and Radarr (same URLs/API keys),
    pick subtitle providers and languages.
-8. **Jellyfin** (8096) — run the wizard; add libraries: *Movies* →
+9. **Jellyfin** (8096) — run the wizard; add libraries: *Movies* →
    `/data/media/movies`, *Shows* → `/data/media/tv`, *Music* →
    `/data/media/music`.
-9. **Jellyseerr** (5055) — sign in with Jellyfin, connect Sonarr and
+10. **Jellyseerr** (5055) — sign in with Jellyfin, connect Sonarr and
    Radarr (URLs + API keys, default profiles/root folders). Family
    requests → auto-download → appears in Jellyfin. (Music requests
    aren't supported — add music directly in Lidarr.)
-10. **Audiobookshelf** (13378) — create the admin account; add libraries
+11. **Audiobookshelf** (13378) — create the admin account; add libraries
    `/audiobooks` and `/podcasts`. Audiobook acquisition has no
    Sonarr-equivalent (Readarr is retired): add **AudioBook Bay** as an
    indexer in Prowlarr (needs FlareSolverr), search from Prowlarr,
@@ -130,17 +143,17 @@ Work through `http://10.0.0.20:<port>` for each service:
    `/data/torrents/audiobooks`), then move/organize into
    `/data/media/audiobooks` — Audiobookshelf's *Match* tool fixes
    metadata on import.
-11. **Kavita** (5000) — create the admin account; add libraries
+12. **Kavita** (5000) — create the admin account; add libraries
     `/books` (type *Book*) and `/comics` (type *Comic* — Kapowarr fills
     this one automatically).
-12. **LazyLibrarian** (5299) — the Readarr substitute: *Config →
+13. **LazyLibrarian** (5299) — the Readarr substitute: *Config →
     Downloaders* → qBittorrent (host `qbittorrent`/`gluetun`, category
-    `books`); *Providers* → add your torznab indexers straight from
-    Prowlarr (each Prowlarr indexer exposes a torznab URL + API key);
-    *Processing* → destination `/data/media/books` for ebooks and
-    `/data/media/audiobooks` for audio. Then add authors/books to
-    monitor — grabs, imports, renames like the *arrs do.
-13. **Kapowarr** (5656) — comics automation: needs a free
+    `books`) or NZBGet if you use Usenet; *Providers* → add your torznab
+    indexers straight from Prowlarr (each Prowlarr indexer exposes a
+    torznab URL + API key); *Processing* → destination `/data/media/books`
+    for ebooks and `/data/media/audiobooks` for audio. Then add
+    authors/books to monitor — grabs, imports, renames like the *arrs do.
+14. **Kapowarr** (5656) — comics automation: needs a free
     [ComicVine API key](https://comicvine.gamespot.com/api/) (*Settings
     → General*); root folder is `/comics-1`, downloads land in
     `/app/temp_downloads` and import automatically. Add volumes
@@ -172,6 +185,28 @@ once the stack is settled (both need API keys → `.env`):
 - **Recyclarr** — syncs [TRaSH-guides](https://trash-guides.info)
   quality profiles/custom formats into Sonarr/Radarr, so release
   selection follows best practice without hand-tuning.
+
+## Usenet vs torrents — do you need NZBGet?
+
+The stack ships **both** download clients; use either or both.
+
+| | qBittorrent (torrents) | NZBGet (Usenet) |
+|--|------------------------|-----------------|
+| Cost | free | **paid** — a provider (~€3–10/mo unlimited) + indexer access |
+| Speed | depends on seeders | maxes your line, consistently |
+| Retention | as long as it's seeded | provider-dependent (years) |
+| Privacy | P2P — **use the VPN** (gluetun) | direct SSL pull, **no VPN needed** (not P2P) |
+| Setup | add a public/private tracker | provider + Usenet indexers in Prowlarr |
+
+Torrents are the zero-cost default and work out of the box behind the
+VPN. Usenet costs money but is faster, quieter, and needs no VPN — many
+people run both and let the *arrs prefer Usenet, falling back to
+torrents. **If you don't have a Usenet subscription, just ignore
+NZBGet** — it sits idle, harmless, until you add a provider. Nothing
+else in the stack depends on it.
+
+Because it isn't P2P, NZBGet deliberately stays **out** of the gluetun
+VPN overlay (docs/08 `docker-compose.vpn.yml` only wraps qBittorrent).
 
 ## Fun extras (ErsatzTV, RomM)
 

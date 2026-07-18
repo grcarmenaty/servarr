@@ -91,6 +91,10 @@ http://torrents.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:8080
 }
 
+http://usenet.@DOMAIN@ {
+	reverse_proxy @SERVARR_IP@:6789
+}
+
 http://audiobooks.@DOMAIN@ {
 	reverse_proxy @SERVARR_IP@:13378
 }

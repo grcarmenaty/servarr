@@ -78,7 +78,8 @@ services from PyPI (all the same projects/licenses below).
 | Whisparr *(commented)* | the adult *arr | GPL-3.0 | [github.com/Whisparr/Whisparr](https://github.com/Whisparr/Whisparr) | [wiki](https://wiki.servarr.com/whisparr) |
 | Prowlarr | indexer manager | GPL-3.0 | [github.com/Prowlarr/Prowlarr](https://github.com/Prowlarr/Prowlarr) | [wiki](https://wiki.servarr.com/prowlarr) |
 | Bazarr | subtitles | GPL-3.0 | [github.com/morpheus65535/bazarr](https://github.com/morpheus65535/bazarr) | [bazarr.media](https://www.bazarr.media) · [wiki](https://wiki.bazarr.media) |
-| qBittorrent | download client | GPL-2.0+ | [github.com/qbittorrent/qBittorrent](https://github.com/qbittorrent/qBittorrent) | [qbittorrent.org](https://www.qbittorrent.org) |
+| qBittorrent | torrent download client | GPL-2.0+ | [github.com/qbittorrent/qBittorrent](https://github.com/qbittorrent/qBittorrent) | [qbittorrent.org](https://www.qbittorrent.org) |
+| NZBGet | Usenet download client | GPL-2.0 | [github.com/nzbgetcom/nzbget](https://github.com/nzbgetcom/nzbget) (maintained fork) | [nzbget.com](https://nzbget.com) |
 | Gluetun | VPN container + kill switch | MIT | [github.com/qdm12/gluetun](https://github.com/qdm12/gluetun) | [wiki](https://github.com/qdm12/gluetun-wiki) |
 | FlareSolverr | Cloudflare challenge solver | MIT | [github.com/FlareSolverr/FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) | — |
 | Audiobookshelf | audiobooks + podcasts | GPL-3.0 | [github.com/advplyr/audiobookshelf](https://github.com/advplyr/audiobookshelf) | [audiobookshelf.org](https://www.audiobookshelf.org) |
