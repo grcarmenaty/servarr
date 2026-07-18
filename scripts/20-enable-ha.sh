@@ -36,12 +36,21 @@ for i in "${!CLOUD_APP_VMIDS[@]}"; do
     enroll "vm:${CLOUD_APP_VMIDS[$i]}" "${CLOUD_APP_NAMES[$i]}"
 done
 enroll "vm:${PHOTOS_VMID}" "${PHOTOS_NAME}"
-enroll "vm:${WAZUH_VMID}" "${WAZUH_NAME}"
-# AI VM: HA only while it has no GPU attached (passthrough pins a VM)
+
+# Wazuh: heavy + self-restarts fine → HA opt-in via cluster.env (docs/06)
+if [[ "${HA_ENROLL_WAZUH:-no}" == "yes" ]]; then
+    enroll "vm:${WAZUH_VMID}" "${WAZUH_NAME}"
+else
+    log "${WAZUH_NAME}: HA_ENROLL_WAZUH=no — left un-HA to fit the RAM budget (docs/06)"
+fi
+
+# AI VM: skip if GPU-pinned; otherwise HA opt-in via cluster.env
 if qm config "${AI_VMID}" 2>/dev/null | grep -q '^hostpci'; then
     log "${AI_NAME}: GPU passthrough detected — node-pinned, skipping HA (docs/16)"
-else
+elif [[ "${HA_ENROLL_AI:-no}" == "yes" ]]; then
     enroll "vm:${AI_VMID}" "${AI_NAME}"
+else
+    log "${AI_NAME}: HA_ENROLL_AI=no — left un-HA to fit the RAM budget (docs/06)"
 fi
 # NOT enrolled on purpose: desktop/GPU VMs from scripts/30 (docs/15).
 

@@ -1,0 +1,19 @@
+# Never commit real secrets — only the *.example templates belong in git.
+# (bootstrap scripts generate these inside the VMs, not here, but this
+# guards against an accidental `git add` from a working copy on a VM.)
+.env
+**/.env
+*.env
+!*.env.example
+!scripts/cluster.env          # this one is config, not secrets — intentionally tracked
+
+# generated / local
+*.bak
+*.bak.*
+*.tmp
+.DS_Store
+
+# WireGuard client configs, keys, certs if ever pulled into the repo dir
+*.key
+*.pem
+wg-clients/

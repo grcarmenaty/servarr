@@ -108,7 +108,7 @@ anti-affinity rules so the redundant pairs never share a node. What
 | cloud-data (DB/NFS) | HA restart | ~2–3 min (Nextcloud stalls, resumes) |
 | Jellyfin / *arrs / HAOS | HA restart | ~2–3 min |
 | Caddy, WireGuard, Kuma, ntfy, Forgejo | HA restart | ~1–2 min (LXCs restart fast) |
-| AI assistant (CPU, default) | HA restart | ~2–3 min |
+| Wazuh, AI assistant | **manual restart** (HA opt-out, docs/06 capacity) | down until you start it on a survivor (minutes) — flip `HA_ENROLL_*` after adding RAM |
 | desktop VMs / AI VM *with* GPU | none — pinned by PCI passthrough | down until their node returns (docs/15/16) |
 
 The restart tier is a genuine limit of single-instance software, not of
@@ -118,15 +118,32 @@ restart with zero human involvement is the honest ceiling — and testing
 it (hard-reset a node, watch it recover) is what turns "should work"
 into "guaranteed".
 
-Capacity check for full-node absorption: HA-protected RAM is
-servarr 16 + cloud tier 18 + photos 8 + wazuh 8 + ai 12 + HAOS 4 +
-LXCs ~6 ≈ **72 GB**, against ~80 GB of headroom on two surviving nodes.
-**This is now tight** — a single node failure lands ~72 GB onto two
-nodes with ~128 GB of raw RAM between them (192 − 64), and after Ceph
-OSDs + Proxmox take their ~24 GB each, the survivors have roughly
-80 GB free for guests. It fits, but there's little slack: before
-HA-protecting anything else, either grow RAM, or drop something from
-the HA set (Wazuh and the AI VM are the usual candidates to leave
-un-HA'd — both self-restart fine, just not automatically). Throwaway
-desktop VMs (`scripts/30`) and a GPU-attached AI VM don't count — they
-can't migrate anyway.
+### Capacity — the cluster is now full, and that's a decision, not a bug
+
+Two surviving nodes offer roughly **~80 GB** of guest RAM (192 GB raw −
+64 GB for the dead node, minus ~24 GB each for Ceph OSDs + Proxmox on
+the two survivors). If we HA-protected **everything**:
+
+```
+servarr 16 + cloud tier 24 (cloud-data 16 + cloud1/2 8) + photos 8
++ wazuh 8 + ai 12 + HAOS 4 + LXCs ~6  ≈  78 GB
+```
+
+78 against 80 is **not safe** — one bad estimate or one growing VM and a
+node failure can't be absorbed. So the policy, encoded in `cluster.env`
+and honored by `20-enable-ha.sh`:
+
+- **Always HA** (must survive, or is cheap): the two Nextcloud apps, both
+  AdGuards, cloud-data, servarr, photos, HAOS, all the LXCs.
+- **HA opt-out by default** (`HA_ENROLL_WAZUH=no`, `HA_ENROLL_AI=no`):
+  Wazuh (8 GB) and the AI VM (12 GB). Both self-restart cleanly on a
+  planned move and neither is life-or-death if it's down for the few
+  minutes it takes you to start it by hand on a survivor. Leaving them
+  out drops the HA set to **~58 GB — comfortable** against 80.
+- **Can't be HA** (node-pinned by passthrough, or disposable): GPU-
+  attached AI VM, desktop VMs from `scripts/30`.
+
+**To HA everything anyway, add RAM.** 128 GB/node makes the whole set
+fit with room; flip both `HA_ENROLL_*` flags to `yes` and re-run
+`20-enable-ha.sh`. Until then, recheck this arithmetic before
+HA-protecting anything new — the platform has grown into its hardware.

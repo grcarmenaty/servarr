@@ -403,8 +403,13 @@ enables; `fail2ban-client status` lists 2 jails on each node;
    backup.**
 3. Escrow checklist — all stored off-cluster (password manager):
    root password · dm-crypt key dump (Phase 6) · WireGuard server key
-   (`/etc/wireguard/` in LXC 103) · `.env` files (cloud-data, servarr,
-   photos, wazuh) · Nextcloud/Guacamole/Wazuh admin passwords.
+   (`/etc/wireguard/` in LXC 103) · every generated `.env`
+   (cloud-data, cloud/app ×2, servarr, photos, wazuh, ai, and
+   `/opt/taiga-docker/.env`) · admin passwords printed by the bootstraps
+   (Nextcloud, Guacamole, Wazuh, Paperless, BookStack, and the
+   Forgejo/Immich/Firefly/Taiga/Karakeep/Homebox first-user accounts).
+   A `.gitignore` keeps `.env` files out of git, but the copies inside
+   the VMs are the ones that matter — back them up.
 
 ### Final acceptance checklist
 
