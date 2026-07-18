@@ -35,7 +35,13 @@ AGPL option, but Valkey is the clean community answer.)
 | Xfce | desktop environment in desktop VMs | GPL/LGPL | [gitlab.xfce.org](https://gitlab.xfce.org) | [xfce.org](https://xfce.org) |
 | noVNC / SPICE | in-browser + rich VM consoles (part of PVE) | MPL-2.0 / LGPL | [github.com/novnc/noVNC](https://github.com/novnc/noVNC) · [spice-space.org](https://www.spice-space.org) | [virt-viewer](https://virt-manager.org) |
 
-## AI tier (VM 207, CPU by default)
+## AI tier (VM 207 *or* LXC 108, CPU by default)
+
+Runs as either a Docker VM (`scripts/16`) or a native LXC
+(`scripts/17`) — same software, see docs/16 for the trade-off. The LXC
+path installs Ollama via its official script and Open WebUI + the voice
+services from PyPI (all the same projects/licenses below).
+
 
 | Software | Role | License | Source | Site/Docs |
 |----------|------|---------|--------|-----------|

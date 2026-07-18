@@ -16,7 +16,10 @@ IMG="/var/lib/vz/template/$(basename "$IMG_URL")"
 
 [[ -f /etc/pve/ceph.conf ]] || die "Ceph not set up yet — the VM disks live on ${VM_POOL}"
 pvesm status --storage "${VM_POOL}" >/dev/null 2>&1 || die "storage '${VM_POOL}' not found"
-! qm status "${SERVARR_VMID}" >/dev/null 2>&1 || die "VMID ${SERVARR_VMID} already exists"
+if qm status "${SERVARR_VMID}" >/dev/null 2>&1; then
+    log "VM ${SERVARR_VMID} (${SERVARR_NAME}) already exists — nothing to do (idempotent skip)"
+    exit 0
+fi
 
 # SSH key for cloud-init login
 KEYFILE=""

@@ -127,6 +127,46 @@ systemctl restart pveproxy pvedaemon
 Happens after failed upgrades or full root filesystems (`df -h /` —
 old journal logs on a 32 GB OS disk: `journalctl --vacuum-size=500M`).
 
+## A Docker service (guest app) won't come up
+
+Inside the relevant VM (servarr, cloud-data, photos, ai, wazuh):
+
+```bash
+docker compose ps                  # which container is unhealthy/restarting
+docker compose logs -f <service>   # why — read the last lines
+docker compose up -d <service>     # recreate just that one
+```
+
+Common causes on this stack:
+
+- **First-boot contention** — cloud-data brings up ~27 containers at
+  once; databases and indexers thrash briefly. Wait a few minutes; if a
+  container is crash-looping on "connection refused", bring up the
+  backing services first: `docker compose up -d db redis`, then the rest.
+- **Wrong password between VMs** — cloud1/cloud2 must have the *same*
+  `POSTGRES_PASSWORD`/`REDIS_PASSWORD` as cloud-data (docs/10). A
+  Nextcloud "database connection failed" almost always means a typo here.
+- **Disk full inside the VM** — `df -h` in the guest; a stuck
+  qBittorrent or ArchiveBox can fill a data disk. Grow it (`qm disk
+  resize` + `xfs_growfs`) or clean up.
+- **`*arr` says "connection refused" to the download client** — use the
+  container name (`qbittorrent`, or `gluetun` with the VPN overlay), not
+  `localhost` (docs/08).
+
+## A guest won't start / migrate (HA or manual)
+
+```bash
+ha-manager status                  # what HA thinks is happening
+qm start <vmid>  ;  pct start <ctid>   # try by hand, read the error
+```
+
+- **"no space left" on a Ceph pool** — `ceph df`; a near-full pool
+  blocks new disk allocation (docs/05 capacity discipline).
+- **A GPU-attached guest won't migrate** — by design (docs/16); it's
+  pinned to its node. Start it there.
+- **Won't fit on the survivors** — the HA RAM budget (docs/06). Check
+  `HA_ENROLL_*` flags; heavy guests are opt-out for exactly this reason.
+
 ## When you're stuck
 
 `ceph health detail` output + the relevant `journalctl` lines are what

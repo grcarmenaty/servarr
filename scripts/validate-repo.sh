@@ -43,15 +43,22 @@ else
 fi
 
 echo "== token substitution (core assets) =="
+# every @TOKEN@ used in scripts/core/ must be substituted by SOME script
+# (11-create-core-lxcs.sh for the LXC assets, 17-create-ai-lxc.sh for @GPU@)
 mapfile -t used < <(grep -ohrE '@[A-Z0-9_]+@' scripts/core/ 2>/dev/null | grep -v '@TOKENS@' | sort -u)
+subs="$(grep -ohE 's\|@[A-Z0-9_]+@\|' scripts/*.sh | sort -u)"
 missing=0
 for t in "${used[@]}"; do
-    grep -qF "s|${t}|" scripts/11-create-core-lxcs.sh || { red "  not substituted: $t"; missing=1; fail=1; }
+    grep -qF "s|${t}|" <<<"$subs" || { red "  not substituted by any script: $t"; missing=1; fail=1; }
 done
 [[ $missing -eq 0 ]] && grn "  ok" || true
 
 echo "== static IP collisions (cluster.env) =="
-dupes="$(grep -oE '10\.0\.0\.[0-9]+' scripts/cluster.env | grep -v '10.0.0.254' | sort | uniq -d)"
+# AI_LXC_IP intentionally equals AI_IP (VM or LXC, never both — docs/16),
+# so exclude that one line from the dup check.
+dupes="$(grep -E '^[A-Z].*=.*10\.0\.0\.[0-9]+' scripts/cluster.env \
+    | grep -v '^AI_LXC_IP=' \
+    | grep -oE '10\.0\.0\.[0-9]+' | grep -v '10.0.0.254' | sort | uniq -d)"
 if [[ -n "$dupes" ]]; then red "  duplicate IPs: $dupes"; fail=1; else grn "  ok"; fi
 
 echo

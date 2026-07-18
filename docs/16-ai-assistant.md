@@ -131,10 +131,67 @@ proprietary component in the platform (docs/12) — Nouveau has no CUDA.
 Given 4 GB VRAM, the CPU-only default is genuinely the better call for
 most people; this appendix is here only because the card exists.
 
+## Alternative: run it as an LXC instead of a VM
+
+The AI service is the one Docker workload worth running as a **native
+LXC** (`scripts/17-create-ai-lxc.sh`) instead of the Docker VM
+(`scripts/16`). Pick **one** — they share the IP `10.0.0.27` and the
+`chat.home.lan` hostname. Comparison:
+
+| | Docker VM (16) | Native LXC (17) |
+|--|----------------|-----------------|
+| Overhead | full guest kernel (~0.5–1 GB) | near-zero (shares host kernel) |
+| Updates | `docker compose pull` (easy) | per-service: `ollama` self-updates, Open WebUI `pip install -U`, voice pip |
+| GPU | vfio passthrough — whole card, VM pinned | **bind-mount `/dev/nvidia*`** — card **shared** with host/other CTs, simpler |
+| Isolation | stronger (separate kernel) | weaker (shared kernel) — fine for a trusted LAN service |
+| HA (no GPU) | yes (opt-in) | yes (opt-in) |
+
+Why the LXC wins specifically for GPU: no exclusive vfio binding, so the
+960 stays available to the host (and could also help Jellyfin), and
+there's no `26-prepare-gpu-passthrough.sh` / vfio dance. The cost is
+hand-maintaining three services instead of one compose file.
+
+**CPU (any node), idempotent:**
+```bash
+bash /root/scripts/17-create-ai-lxc.sh          # add --ha to enroll now
+pct exec 108 -- ollama pull qwen3:8b
+```
+
+**With the GTX 960** (⚠ GPU-node-only; **do NOT** run
+`26-prepare-gpu-passthrough.sh` — that's the VM/vfio path; the LXC needs
+the host to *keep* the driver):
+```bash
+# on GPU_NODE — the script installs the host NVIDIA driver if missing:
+bash /root/scripts/17-create-ai-lxc.sh --gpu 01:00
+# → reboot the node once when it asks (loads the module), then re-run the
+#   same command; it bind-mounts the device nodes into the container.
+pct exec 108 -- nvidia-smi          # confirm the card is visible inside
+```
+
+GPU-in-LXC caveat (honest): the container's NVIDIA **userspace libraries
+must match the host driver version**. The provisioner installs Debian's
+`libnvidia-ml1`, which usually matches; if `nvidia-smi` inside the CT
+fails, Ollama simply runs **CPU-only** until the versions line up — it
+never breaks, just doesn't accelerate. `20-enable-ha.sh` detects the
+bind-mount and skips HA for the GPU case, same as the VM.
+
+Everything else — authentication, the API endpoint, the voice
+integration, the model menu — is identical to the VM; only the
+packaging differs.
+
 ## Day-2
 
+**VM variant:**
 - Update: `docker compose pull && docker compose up -d` (models
   unaffected). New models `ollama pull`, remove with `ollama rm`.
 - Loaded models: `docker exec ollama ollama ps`.
-- Model disk grows like any other: `qm disk resize 207 scsi1 +100G` +
+- Model disk grows: `qm disk resize 207 scsi1 +100G` +
   `xfs_growfs /mnt/models`.
+
+**LXC variant:**
+- Update: `pct exec 108 -- bash -c 'curl -fsSL https://ollama.com/install.sh | sh'`
+  for Ollama; `pct exec 108 -- /opt/open-webui/venv/bin/pip install -U open-webui &&
+  pct exec 108 -- systemctl restart open-webui` for the UI.
+- Loaded models: `pct exec 108 -- ollama ps`.
+- Model disk is the `/mnt/models` mountpoint — grow it in the CT's
+  *Resources* tab.

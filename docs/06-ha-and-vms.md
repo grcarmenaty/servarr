@@ -147,3 +147,45 @@ and honored by `20-enable-ha.sh`:
 fit with room; flip both `HA_ENROLL_*` flags to `yes` and re-run
 `20-enable-ha.sh`. Until then, recheck this arithmetic before
 HA-protecting anything new — the platform has grown into its hardware.
+
+### Resource profile — what actually works the cluster
+
+Allocation ≠ consumption. The heaviest *sustained* consumers, by kind:
+
+**CPU**
+
+1. **AI inference** — pins all its cores to ~100% for the full duration
+   of every response. The single biggest sustained CPU load; a whole
+   node's compute is busy while someone chats.
+2. **Ceph recovery/backfill (on the hosts)** — after a disk or node
+   failure, re-replication saturates CPU (LUKS AES on every write),
+   disks, and the 10 G mesh for hours. The most intense event the
+   cluster experiences — and why you never reboot two nodes at once.
+3. **Immich ML** — face/object recognition pegs cores for a while after
+   photo imports; idle otherwise.
+4. **Wazuh indexer** — continuous moderate load, spikes on vuln scans.
+5. Bursty: Jellyfin *if* it software-transcodes (direct play ≈ 0);
+   Paperless OCR (hard spike per document).
+
+**RAM** (steady-state, not allocation)
+
+1. **Wazuh (8 GB)** — the OpenSearch indexer genuinely uses most of it.
+2. **AI (12 GB)** — a 7–8 B model sits ~5–6 GB resident, more for bigger.
+3. **cloud-data (16 GB)** — no single hog but ~27 containers (Postgres +
+   MariaDB + Taiga's stack + Meilisearch + Paperless) coexisting.
+4. **Immich (8 GB)** — ML models load during jobs.
+5. servarr's 16 GB and the Nextcloud apps' 4 GB are **headroom**, not
+   need — safe to trim if you ever need RAM back.
+
+**Disk I/O**: Ceph recovery (#1 by far) › Wazuh's constant writes ›
+qBittorrent downloads › Immich thumbnail/ML generation.
+
+**Network**: Ceph replication (3× write amplification) dominates — but
+it's on the dedicated 10 G mesh, off your LAN. Jellyfin streaming and
+downloads share the 1 G LAN.
+
+Takeaway: the three to shed first under pressure are exactly the two
+already HA-opted-out (**Wazuh**, **AI**) plus watching **Immich** during
+big imports — and the biggest load isn't a guest at all, it's **Ceph
+rebuilding**, which is why ~30 % free capacity is a rule, not a
+suggestion.

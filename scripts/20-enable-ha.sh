@@ -44,13 +44,24 @@ else
     log "${WAZUH_NAME}: HA_ENROLL_WAZUH=no — left un-HA to fit the RAM budget (docs/06)"
 fi
 
-# AI VM: skip if GPU-pinned; otherwise HA opt-in via cluster.env
-if qm config "${AI_VMID}" 2>/dev/null | grep -q '^hostpci'; then
-    log "${AI_NAME}: GPU passthrough detected — node-pinned, skipping HA (docs/16)"
-elif [[ "${HA_ENROLL_AI:-no}" == "yes" ]]; then
-    enroll "vm:${AI_VMID}" "${AI_NAME}"
-else
-    log "${AI_NAME}: HA_ENROLL_AI=no — left un-HA to fit the RAM budget (docs/06)"
+# AI service — may be the VM (16) or the LXC (17), never both. Skip if
+# GPU-attached (pinned); otherwise HA opt-in via cluster.env.
+if qm status "${AI_VMID}" >/dev/null 2>&1; then           # VM variant
+    if qm config "${AI_VMID}" | grep -q '^hostpci'; then
+        log "${AI_NAME} (VM): GPU passthrough — node-pinned, skipping HA (docs/16)"
+    elif [[ "${HA_ENROLL_AI:-no}" == "yes" ]]; then
+        enroll "vm:${AI_VMID}" "${AI_NAME}"
+    else
+        log "${AI_NAME} (VM): HA_ENROLL_AI=no — left un-HA for the RAM budget (docs/06)"
+    fi
+elif pct status "${AI_LXC_ID}" >/dev/null 2>&1; then       # LXC variant
+    if grep -q 'nvidia' "/etc/pve/lxc/${AI_LXC_ID}.conf" 2>/dev/null; then
+        log "${AI_NAME} (LXC): GPU bind-mount — node-pinned, skipping HA (docs/16)"
+    elif [[ "${HA_ENROLL_AI:-no}" == "yes" ]]; then
+        enroll "ct:${AI_LXC_ID}" "${AI_NAME}"
+    else
+        log "${AI_NAME} (LXC): HA_ENROLL_AI=no — left un-HA for the RAM budget (docs/06)"
+    fi
 fi
 # NOT enrolled on purpose: desktop/GPU VMs from scripts/30 (docs/15).
 

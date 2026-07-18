@@ -332,20 +332,25 @@ cd wazuh && sudo WAZUH_VERSION=4.14.6 bash bootstrap.sh
 `bash 25-install-wazuh-agent.sh` on each node, `scp`+run in each VM,
 `pct push`+exec in each LXC.
 
-**9g. AI assistant + local voice** — `docs/16`. **CPU by default** — a
-normal VM, any node, no GPU needed:
+**9g. AI assistant + local voice** — `docs/16`. **CPU by default**, any
+node. Choose **one** packaging (same IP/hostname):
+
+*Docker VM* (default):
 ```bash
 bash /root/scripts/16-create-ai-vm.sh              # any node
 scp -r ai cloud@10.0.0.27:~ && ssh cloud@10.0.0.27
 cd ai && sudo bash bootstrap.sh                    # single pass (CPU)
-docker compose up -d
-docker exec ollama ollama pull qwen3:8b
+docker compose up -d && docker exec ollama ollama pull qwen3:8b
 ```
-→ **first signup = admin** at `http://chat.home.lan`, then
-`ENABLE_SIGNUP=false` in `.env` + `docker compose up -d`. Add the
-Whisper/Piper Wyoming services to Home Assistant for local voice
-(docs/16). Optional GTX 960 acceleration (pins the VM, drops HA) is the
-appendix in docs/16 — skip it unless you want it.
+*or native LXC* (lighter; better GPU sharing — docs/16):
+```bash
+bash /root/scripts/17-create-ai-lxc.sh             # --gpu 01:00 on GPU_NODE
+pct exec 108 -- ollama pull qwen3:8b
+```
+→ **first signup = admin** at `http://chat.home.lan`, then disable
+signups. Add the Whisper/Piper Wyoming services to Home Assistant for
+local voice (docs/16). Optional GTX 960 acceleration pins the guest and
+drops its HA — see docs/16.
 
 **Checkpoint 9**: `http://home.lan` portal loads from a LAN device and
 **every tile works**; phone on mobile data connects via WireGuard and

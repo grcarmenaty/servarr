@@ -80,7 +80,7 @@ triple-replicated, ~6.3 TB safe working set.
 | `cloud/` | Compose stacks for the cloud tier (`data/` + `app/` × 2 VMs) |
 | `photos/` | Bootstrap for the Immich VM (fetches Immich's official compose) |
 | `wazuh/` | Bootstrap for the Wazuh VM (official single-node deployment) |
-| `ai/` | Compose + bootstrap for the AI VM (Ollama + Open WebUI + voice; CPU, optional GPU overlay) |
+| `ai/` | Compose + bootstrap for the AI VM (Ollama + Open WebUI + voice; CPU, optional GPU overlay) — or run it as a native LXC via `scripts/17` |
 
 ## Setup order
 

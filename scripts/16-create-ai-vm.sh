@@ -29,7 +29,10 @@ IMG_URL="https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcl
 IMG="/var/lib/vz/template/$(basename "$IMG_URL")"
 
 [[ -f /etc/pve/ceph.conf ]] || die "Ceph not set up yet"
-! qm status "${AI_VMID}" >/dev/null 2>&1 || die "VMID ${AI_VMID} already exists"
+if qm status "${AI_VMID}" >/dev/null 2>&1; then
+    log "VM ${AI_VMID} (${AI_NAME}) already exists — nothing to do (idempotent skip)"
+    exit 0
+fi
 
 KEYFILE=""
 for k in /root/.ssh/id_ed25519.pub /root/.ssh/id_rsa.pub; do

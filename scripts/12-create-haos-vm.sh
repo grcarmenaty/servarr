@@ -17,7 +17,10 @@ URL="https://github.com/home-assistant/operating-system/releases/download/${HAOS
 IMG="/var/lib/vz/template/haos_ova-${HAOS_VERSION}.qcow2"
 
 [[ -f /etc/pve/ceph.conf ]] || die "Ceph not set up yet"
-! qm status "${HAOS_VMID}" >/dev/null 2>&1 || die "VMID ${HAOS_VMID} already exists"
+if qm status "${HAOS_VMID}" >/dev/null 2>&1; then
+    log "VM ${HAOS_VMID} (haos) already exists — nothing to do (idempotent skip)"
+    exit 0
+fi
 
 if [[ ! -f "$IMG" ]]; then
     log "Downloading Home Assistant OS ${HAOS_VERSION}"
