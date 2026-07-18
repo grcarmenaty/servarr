@@ -24,7 +24,7 @@ HA-protected like anything else.
 | qBittorrent | 8080 | torrent download client — **qbittorrent-nox** (headless; the web UI is its only interface) |
 | NZBGet | 6789 | Usenet download client (NZB) — complements qBittorrent |
 | FlareSolverr | 8191 | solves Cloudflare challenges for Prowlarr |
-| Gluetun (optional) | — | VPN tunnel + kill switch in front of qBittorrent |
+| Gluetun (optional) | — | PIA VPN tunnel + kill switch in front of qBittorrent (§ Torrent VPN) |
 
 ## Storage design
 
@@ -185,6 +185,60 @@ once the stack is settled (both need API keys → `.env`):
 - **Recyclarr** — syncs [TRaSH-guides](https://trash-guides.info)
   quality profiles/custom formats into Sonarr/Radarr, so release
   selection follows best practice without hand-tuning.
+
+## Torrent VPN — Private Internet Access (PIA)
+
+`docker-compose.vpn.yml` routes **all** qBittorrent traffic through a
+[gluetun](https://github.com/qdm12/gluetun) container preconfigured for
+**PIA**, with a kill switch (if the tunnel drops, torrent traffic stops
+dead — it never leaks to your ISP).
+
+**Setup:**
+
+1. In `.env` set `PIA_USER`, `PIA_PASSWORD` (your PIA account login), and
+   `PIA_REGION` (a port-forwarding-capable region — most EU/CA regions,
+   *not* the US).
+2. Start with the overlay:
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.vpn.yml up -d
+   ```
+3. In qBittorrent → *Options → Web UI*, tick **"Bypass authentication
+   for clients on localhost"** — this lets the port-sync sidecar set the
+   forwarded port without a password.
+4. Point the *arrs' download client at host **`gluetun`** (not
+   `qbittorrent`), port 8080 — qBittorrent shares gluetun's network now.
+
+**Verify the tunnel** (should show a PIA IP, not yours):
+```bash
+docker exec gluetun wget -qO- https://ipinfo.io/ip
+```
+
+**Port forwarding**: PIA hands out an incoming port (better peer
+connectivity and ratio) that **changes on every reconnect**. gluetun
+writes it to `/gluetun/forwarded_port`; the `qbt-port-sync` sidecar
+polls that file and updates qBittorrent's listen port automatically —
+no manual step after the one-time "bypass auth" tick.
+
+### What a VPN here does — and doesn't — do (honest framing)
+
+PIA is **outbound privacy for the torrent client only**: it hides that
+one traffic stream from your ISP and gives it a shared exit IP. That's
+its whole job here. It is *not*:
+
+- **Inbound security** — that's already handled: one exposed port
+  (WireGuard), a default-drop firewall, fail2ban, Wazuh (docs/09, /13).
+- **A reason to route everything through it.** Do **not** put the whole
+  server or other VMs behind PIA — it would break inbound WireGuard,
+  add latency to every service, and give a *worse* security posture
+  (you'd trust a third party with all traffic). Keep PIA scoped to
+  qBittorrent; use your own WireGuard (docs/09) for secure remote access.
+- **A substitute for the download-at-rest protections** — encryption
+  (LUKS OSDs) and backups still matter.
+
+PIA is a commercial service (a paid subscription); gluetun, the client
+wrapping it, is MIT/FOSS (docs/12). If you'd rather a different
+provider later, gluetun supports ~40 of them — only the `.env` block and
+the two `VPN_SERVICE_PROVIDER`/auth lines change.
 
 ## Usenet vs torrents — do you need NZBGet?
 

@@ -1,14 +1,15 @@
 # VPN overlay — routes ALL qBittorrent traffic through a gluetun VPN
-# container. Optional but strongly recommended for torrenting.
+# container, preconfigured for Private Internet Access (PIA).
+# Optional but strongly recommended for torrenting.
 #
 #   docker compose -f docker-compose.yml -f docker-compose.vpn.yml up -d
 #
-# Fill in the VPN_* / WIREGUARD_* variables in .env first. Provider-specific
-# settings: https://github.com/qdm12/gluetun-wiki
+# Fill in the PIA_* variables in .env first. Full provider reference:
+# https://github.com/qdm12/gluetun-wiki/blob/main/setup/providers/private-internet-access.md
 #
-# Note: with this overlay active, qBittorrent shares gluetun's network —
-# other containers (Sonarr/Radarr/Prowlarr) must point their download
-# client at host "gluetun" port 8080, not "qbittorrent".
+# With this overlay active, qBittorrent shares gluetun's network namespace —
+# the *arrs must point their download client at host "gluetun" port 8080
+# (NOT "qbittorrent"). NZBGet (Usenet) is NOT tunnelled — it isn't P2P.
 
 services:
   gluetun:
@@ -21,19 +22,35 @@ services:
       - /dev/net/tun:/dev/net/tun
     environment:
       TZ: ${TZ:-Etc/UTC}
-      VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER}
-      VPN_TYPE: ${VPN_TYPE:-wireguard}
-      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY:-}
-      WIREGUARD_ADDRESSES: ${WIREGUARD_ADDRESSES:-}
-      SERVER_COUNTRIES: ${VPN_SERVER_COUNTRIES:-}
-      # kill switch is gluetun's default: if the VPN drops, traffic stops
+      # ── PIA ────────────────────────────────────────────────────────────
+      VPN_SERVICE_PROVIDER: private internet access
+      VPN_TYPE: wireguard                 # PIA works over wireguard via gluetun
+      # PIA authenticates with your account username/password even in
+      # wireguard mode (gluetun uses them to fetch the wg config):
+      OPENVPN_USER: ${PIA_USER}
+      OPENVPN_PASSWORD: ${PIA_PASSWORD}
+      # Region — MUST be a port-forwarding region if you enable PF below.
+      # List: https://serverlist.piaservers.net/vpninfo/servers/v6
+      SERVER_REGIONS: ${PIA_REGION:-Netherlands}
+      # ── port forwarding (better torrent connectivity/ratio) ────────────
+      VPN_PORT_FORWARDING: ${PIA_PORT_FORWARDING:-on}
+      VPN_PORT_FORWARDING_PROVIDER: private internet access
+      VPN_PORT_FORWARDING_STATUS_FILE: /gluetun/forwarded_port
+      # kill switch is gluetun's default: if the tunnel drops, traffic stops.
+      # Allow the LAN so the web UIs stay reachable while tunnelled:
+      FIREWALL_OUTBOUND_SUBNETS: 10.0.0.0/24
     ports:
-      # qBittorrent's ports are published via gluetun
+      # qBittorrent's web UI + BitTorrent ports are published via gluetun
       - "8080:8080"
       - "6881:6881"
       - "6881:6881/udp"
     volumes:
       - ${CONFIG_ROOT}/gluetun:/gluetun
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "https://ipinfo.io/ip"]
+      interval: 1m
+      timeout: 20s
+      retries: 3
 
   qbittorrent:
     network_mode: "service:gluetun"
@@ -41,3 +58,22 @@ services:
     depends_on:
       gluetun:
         condition: service_healthy
+
+  # ── PIA port-forward → qBittorrent auto-sync (optional but recommended) ─
+  # PIA hands out a forwarded port that CHANGES on every reconnect. gluetun
+  # writes it to /gluetun/forwarded_port; this tiny sidecar reads it and sets
+  # qBittorrent's listen port via its WebUI API whenever it changes.
+  # REQUIRES: in qBittorrent → Options → Web UI, tick "Bypass authentication
+  # for clients on localhost" (the sidecar shares gluetun's loopback).
+  qbt-port-sync:
+    image: alpine:latest
+    container_name: qbt-port-sync
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+    depends_on:
+      qbittorrent:
+        condition: service_started
+    volumes:
+      - ${CONFIG_ROOT}/gluetun:/gluetun:ro
+      - ./pia-port-sync.sh:/pia-port-sync.sh:ro
+    entrypoint: ["sh", "/pia-port-sync.sh"]

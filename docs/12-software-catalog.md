@@ -134,7 +134,7 @@ services from PyPI (all the same projects/licenses below).
 |---------|----------|--------|
 | [Enable Banking](https://enablebanking.com) | Firefly bank sync (PSD2 aggregator) | commercial SaaS, free restricted tier; **optional** — CSV import is the FOSS-only path |
 | [GoCardless Bank Account Data](https://gocardless.com/bank-account-data/) | legacy bank sync | commercial SaaS, winding down |
-| Your VPN provider (via Gluetun) | torrent privacy | commercial service; Gluetun itself is MIT |
+| [Private Internet Access (PIA)](https://www.privateinternetaccess.com) | torrent-client outbound privacy (via Gluetun) | commercial VPN subscription; the Gluetun client wrapping it is MIT/FOSS. Scoped to qBittorrent only — see docs/08 |
 | DDNS (e.g. [DuckDNS](https://www.duckdns.org)) | WireGuard endpoint | free service; self-host alternative: your own domain + DNS API |
 | [Quad9](https://quad9.net) / upstream DNS | AdGuard upstream | public resolver (Swiss non-profit); swap freely |
 
