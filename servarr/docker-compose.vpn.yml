@@ -1,11 +1,11 @@
 # VPN overlay — routes ALL qBittorrent traffic through a gluetun VPN
-# container, preconfigured for Private Internet Access (PIA).
+# container, preconfigured for Proton VPN.
 # Optional but strongly recommended for torrenting.
 #
 #   docker compose -f docker-compose.yml -f docker-compose.vpn.yml up -d
 #
-# Fill in the PIA_* variables in .env first. Full provider reference:
-# https://github.com/qdm12/gluetun-wiki/blob/main/setup/providers/private-internet-access.md
+# Fill in the PROTON_* variables in .env first. Full provider reference:
+# https://github.com/qdm12/gluetun-wiki/blob/main/setup/providers/protonvpn.md
 #
 # With this overlay active, qBittorrent shares gluetun's network namespace —
 # the *arrs must point their download client at host "gluetun" port 8080
@@ -22,20 +22,21 @@ services:
       - /dev/net/tun:/dev/net/tun
     environment:
       TZ: ${TZ:-Etc/UTC}
-      # ── PIA ────────────────────────────────────────────────────────────
-      VPN_SERVICE_PROVIDER: private internet access
-      VPN_TYPE: wireguard                 # PIA works over wireguard via gluetun
-      # PIA authenticates with your account username/password even in
-      # wireguard mode (gluetun uses them to fetch the wg config):
-      OPENVPN_USER: ${PIA_USER}
-      OPENVPN_PASSWORD: ${PIA_PASSWORD}
-      # Region — MUST be a port-forwarding region if you enable PF below.
-      # List: https://serverlist.piaservers.net/vpninfo/servers/v6
-      SERVER_REGIONS: ${PIA_REGION:-Netherlands}
-      # ── port forwarding (better torrent connectivity/ratio) ────────────
-      VPN_PORT_FORWARDING: ${PIA_PORT_FORWARDING:-on}
-      VPN_PORT_FORWARDING_PROVIDER: private internet access
+      # ── Proton VPN ─────────────────────────────────────────────────────
+      VPN_SERVICE_PROVIDER: protonvpn
+      VPN_TYPE: wireguard
+      # Generate a WireGuard config in the Proton dashboard (Downloads →
+      # WireGuard): tick "NAT-PMP (Port Forwarding)", pick a P2P server, and
+      # copy the private key — it's shown ONLY at creation. See docs/08.
+      WIREGUARD_PRIVATE_KEY: ${PROTON_WG_PRIVATE_KEY}
+      # Server selection (Proton uses country/city names):
+      SERVER_COUNTRIES: ${PROTON_COUNTRIES:-Netherlands}
+      # ── port forwarding via NAT-PMP (better torrent connectivity) ──────
+      VPN_PORT_FORWARDING: ${PROTON_PORT_FORWARDING:-on}
+      VPN_PORT_FORWARDING_PROVIDER: protonvpn
       VPN_PORT_FORWARDING_STATUS_FILE: /gluetun/forwarded_port
+      # only connect to servers that actually support port forwarding:
+      PORT_FORWARD_ONLY: ${PROTON_PORT_FORWARDING:-on}
       # kill switch is gluetun's default: if the tunnel drops, traffic stops.
       # Allow the LAN so the web UIs stay reachable while tunnelled:
       FIREWALL_OUTBOUND_SUBNETS: 10.0.0.0/24
@@ -59,10 +60,11 @@ services:
       gluetun:
         condition: service_healthy
 
-  # ── PIA port-forward → qBittorrent auto-sync (optional but recommended) ─
-  # PIA hands out a forwarded port that CHANGES on every reconnect. gluetun
-  # writes it to /gluetun/forwarded_port; this tiny sidecar reads it and sets
-  # qBittorrent's listen port via its WebUI API whenever it changes.
+  # ── Proton port-forward → qBittorrent auto-sync (optional, recommended) ─
+  # Proton keeps the forwarded port stable, but it changes if the tunnel
+  # drops or gluetun restarts. gluetun writes it to /gluetun/forwarded_port;
+  # this tiny sidecar reads it and sets qBittorrent's listen port via its
+  # WebUI API whenever it changes.
   # REQUIRES: in qBittorrent → Options → Web UI, tick "Bypass authentication
   # for clients on localhost" (the sidecar shares gluetun's loopback).
   qbt-port-sync:
@@ -75,5 +77,5 @@ services:
         condition: service_started
     volumes:
       - ${CONFIG_ROOT}/gluetun:/gluetun:ro
-      - ./pia-port-sync.sh:/pia-port-sync.sh:ro
-    entrypoint: ["sh", "/pia-port-sync.sh"]
+      - ./vpn-port-sync.sh:/port-sync.sh:ro
+    entrypoint: ["sh", "/port-sync.sh"]

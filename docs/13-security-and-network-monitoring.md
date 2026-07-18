@@ -21,7 +21,7 @@ pretending otherwise produces unusable setups.
 | Remote access | WireGuard, key-based, per-device configs + PSK | 1 |
 | At rest | LUKS-encrypted OSDs (docs/05 §4) | 3 |
 | Guest isolation | VMs for Docker/internet-facing stacks; unprivileged LXCs for infra | 2 |
-| Torrent path | gluetun kill-switch namespace → PIA VPN (outbound privacy) | 2 |
+| Torrent path | gluetun kill-switch namespace → Proton VPN (outbound privacy) | 2 |
 | Patching | unattended security upgrades in every guest; deliberate node updates (docs/09) | 1, 2 |
 | Auth | unique passwords per service; *arr auth enabled; SMB authenticated | 4 |
 | Blast radius | per-service guests — Jellyfin exploit ≠ Nextcloud data | 2 |
